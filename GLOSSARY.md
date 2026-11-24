@@ -12,6 +12,10 @@ _Avoid_: Client, account, tenant (outside NetBox context)
 A person who logs into the Client Portal on behalf of exactly one Customer.
 _Avoid_: User, login, account
 
+**MSP Staff**:
+A person at Akimbo Technology who administers Customers and Portal Users; never a Portal User themselves.
+_Avoid_: Admin, operator, user
+
 **Marketing Site**:
 The public, unauthenticated part of the website describing the MSP's services.
 _Avoid_: Homepage, landing site

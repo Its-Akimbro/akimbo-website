@@ -387,6 +387,173 @@
 </div>
 </div>
 
+<!-- ================================================================== -->
+<!-- VARIANT D — B + C combined: services-led site, audit as the front door -->
+<!-- ================================================================== -->
+<div data-variant="D" data-name="Services + audit-first (B+C)">
+<div class="wrap">
+  <aside>
+    <h2>Sitemap · D</h2>
+    <ul>
+      <li><a href="#d-home">/</a> Home</li>
+      <li><a href="#d-services">/services</a> (hub)
+        <ul>
+          <li><a href="#d-audit">/services/network-audit</a> ★ entry offer</li>
+          <li><a href="#d-svc">/services/managed-networking</a></li>
+          <li>/services/servers-virtualisation</li>
+          <li>/services/network-projects</li>
+        </ul>
+      </li>
+      <li><a href="#d-plans">/plans</a> (monthly tiers)</li>
+      <li><a href="#d-how">/how-we-work</a> (principles + Client Portal)</li>
+      <li><a href="#d-about">/about</a></li>
+      <li><a href="#d-contact">/contact</a> (book audit · general enquiry)</li>
+      <li>/privacy · /terms</li>
+      <li>↗ portal.akimbo.technology</li>
+    </ul>
+    <p class="pitch"><b>From B:</b> one page per service so search has somewhere to land; services lead the home page.<br><b>From C:</b> the fixed-price audit is the productised form of "Documentation &amp; audits" and the primary CTA everywhere; /plans holds monthly tiers.<br><b>Merged:</b> B's /client-portal folds into C's /how-we-work; C's /book becomes a tab on /contact.</p>
+    <p class="pitch">Pages: 11 (incl. legal). Must publish: audit price. Plan prices may say "from $X" or "quoted after audit".</p>
+  </aside>
+  <main>
+    <article class="page" id="d-home">
+      <header class="url">akimbo.technology/</header>
+      <section>
+        <span class="tag">Nav</span>
+        <p>Services ▾ · Plans · How we work · About · Contact · <b>[Book an audit]</b> · <i>Log in</i></p>
+      </section>
+      <section>
+        <span class="tag">Hero (services-led, audit CTA)</span>
+        <h1>Managed networks and servers for small businesses in <span class="ph">[City/Region]</span>.</h1>
+        <p>Reliable Wi-Fi, secure firewalls, backed-up servers, and documentation you can actually read. Start with a fixed-price audit so you know exactly what you've got.</p>
+        <span class="btn">Book a network audit · <span class="ph">[$X]</span></span><span class="btn ghost">Explore services</span>
+      </section>
+      <section>
+        <span class="tag">Services (audit tile first and emphasised)</span>
+        <div class="grid">
+          <div style="border-width:2px;border-color:var(--ink)"><span class="tag">Start here</span><h3>Network audit →</h3>Every device documented and a plain-English risk report. <b><span class="ph">[$X]</span> fixed.</b></div>
+          <div><h3>Managed networking →</h3>Monitoring, updates and care, monthly.</div>
+          <div><h3>Servers &amp; virtualisation →</h3>Hosts, storage, backups, monthly.</div>
+          <div><h3>Network projects →</h3>Installs, moves, upgrades. Fixed quote.</div>
+        </div>
+      </section>
+      <section>
+        <span class="tag">How it works (C's funnel, 3 steps)</span>
+        <ol class="steps">
+          <li><b>Audit.</b> We document your network and hand you the results, plus a Client Portal login.</li>
+          <li><b>Fix.</b> A fixed quote for anything urgent, with no obligation.</li>
+          <li><b>Run.</b> Pick a monthly plan so it stays that way. <span class="btn ghost">See plans</span></li>
+        </ol>
+      </section>
+      <section>
+        <span class="tag">Why Akimbo (B's 3 points)</span>
+        <div class="grid">
+          <div><b>Infrastructure specialists.</b> Networks and servers are all we do.</div>
+          <div><b>Everything documented and visible.</b> Your setup, live in the Client Portal, and yours to keep.</div>
+          <div><b>Local and remote.</b> On-site across <span class="ph">[region]</span>; remote anywhere.</div>
+        </div>
+      </section>
+      <section>
+        <span class="tag">Trust strip</span>
+        <p>Run by <span class="ph">[Founder name]</span>, a network engineer with <span class="ph">[N]</span> years of experience · <span class="ph">[certs]</span> · insured LLC · no lock-in contracts.</p>
+      </section>
+    </article>
+
+    <article class="page" id="d-services">
+      <header class="url">akimbo.technology/services</header>
+      <section>
+        <span class="tag">Hub</span>
+        <table>
+          <tr><th>Service</th><th>Good fit if…</th><th>Billing</th></tr>
+          <tr><td><b>Network audit</b> ★</td><td>You don't know what you have, or you're not sure where to start.</td><td><span class="ph">[$X]</span> fixed</td></tr>
+          <tr><td>Managed networking</td><td>You want someone watching the network so you don't have to.</td><td>Monthly, see Plans</td></tr>
+          <tr><td>Servers &amp; virtualisation</td><td>You run on-site servers or aren't sure your backups work.</td><td>Monthly, see Plans</td></tr>
+          <tr><td>Network projects</td><td>You're moving, expanding, or fixing one big problem.</td><td>Fixed quote</td></tr>
+        </table>
+      </section>
+    </article>
+
+    <article class="page" id="d-audit">
+      <header class="url">akimbo.technology/services/network-audit</header>
+      <section>
+        <span class="tag">Offer (C's audit page in B's service-page template)</span>
+        <h1>Network audit: <span class="ph">[$X]</span></h1>
+        <p>For one site with up to <span class="ph">[N]</span> devices. We document every firewall, switch, access point, server and IP address, flag what's risky, and hand you the results, whether or not you hire us afterwards.</p>
+      </section>
+      <section>
+        <span class="tag">What you get</span>
+        <ul><li>Full inventory, in your own Client Portal login</li><li>Plain-English risk report, ranked by urgency</li><li>Walk-through call</li><li>Fixed quote for fixes, with no obligation</li></ul>
+      </section>
+      <section>
+        <span class="tag">How it runs</span>
+        <ol class="steps"><li>Scoping call</li><li>Half-day on-site visit</li><li>Report and portal access within <span class="ph">[5]</span> business days</li><li>Walk-through</li></ol>
+      </section>
+      <section><span class="tag">FAQ</span><p>Will you disrupt my staff? · Do you need passwords? · What if you find something urgent? · Bigger than one site?</p></section>
+      <section><span class="tag">CTA</span><span class="btn">Book an audit</span></section>
+    </article>
+
+    <article class="page" id="d-svc">
+      <header class="url">akimbo.technology/services/managed-networking <span class="note">(template for the 3 other services)</span></header>
+      <section><span class="tag">Hero</span><h1>Managed networking</h1><p>Your firewall, switches and Wi-Fi, monitored, patched and looked after for a flat monthly fee.</p></section>
+      <section><span class="tag">What's included</span><ul><li>24/7 monitoring, with alerts going to us</li><li>Firmware and security updates</li><li>Configuration backups</li><li>Remote fixes; on-site in <span class="ph">[region]</span></li><li>Live documentation in your Client Portal</li></ul></section>
+      <section><span class="tag">Who it's for / not for</span><p>10–100 staff, one or more offices. Not desktop or helpdesk support.</p></section>
+      <section><span class="tag">Pricing pointer</span><p>Included in the Managed and Managed + Servers plans. <span class="btn ghost">See plans</span></p></section>
+      <section><span class="tag">CTA (always back to the audit)</span><p><b>Every plan starts with an audit</b>, so we quote on what you actually have. <span class="btn">Book an audit</span></p></section>
+    </article>
+
+    <article class="page" id="d-plans">
+      <header class="url">akimbo.technology/plans</header>
+      <section>
+        <span class="tag">Plans (C's table)</span>
+        <table>
+          <tr><th></th><th>Essentials</th><th>Managed</th><th>Managed + Servers</th></tr>
+          <tr><td>Monitoring &amp; alerts</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Updates &amp; config backups</td><td>Quarterly</td><td>Monthly</td><td>Monthly</td></tr>
+          <tr><td>Remote support</td><td>Business hours</td><td>Business hours</td><td>Extended</td></tr>
+          <tr><td>On-site visits</td><td>Billed</td><td><span class="ph">[N]</span>/yr</td><td><span class="ph">[N]</span>/yr</td></tr>
+          <tr><td>Servers, virtualisation &amp; backups</td><td></td><td></td><td>✓</td></tr>
+          <tr><td>Client Portal</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Price</td><td colspan="3"><span class="ph">[either "from $X/mo" per tier, or "quoted after your audit"]</span></td></tr>
+        </table>
+        <p>Projects are quoted separately. Audit fee <span class="ph">[credited against first N months?]</span></p>
+      </section>
+    </article>
+
+    <article class="page" id="d-how">
+      <header class="url">akimbo.technology/how-we-work</header>
+      <section>
+        <span class="tag">Principles (C)</span>
+        <ul>
+          <li><b>Documented first.</b> Nothing changes without being recorded.</li>
+          <li><b>No hostage-taking.</b> Your passwords and documentation are yours. Leave any time.</li>
+          <li><b>Plain English.</b> Reports you can forward to your accountant.</li>
+        </ul>
+      </section>
+      <section>
+        <span class="tag">Client Portal (B's feature page, folded in)</span>
+        <h3>See your infrastructure, any time</h3>
+        <p>Every Customer, including audit-only ones, gets a read-only login showing their sites, racks, devices, circuits, IP addresses and VLANs: the same records we work from.</p>
+        <p class="note">Annotated screenshots: overview, device detail, IP list. "Customer log in →"</p>
+      </section>
+    </article>
+
+    <article class="page" id="d-about">
+      <header class="url">akimbo.technology/about</header>
+      <section><span class="tag">About</span><p><span class="ph">[Photo]</span> Founder story, values, credentials and a service-area map. "When you call, you get me."</p></section>
+    </article>
+
+    <article class="page" id="d-contact">
+      <header class="url">akimbo.technology/contact</header>
+      <section>
+        <span class="tag">Two tabs</span>
+        <p><b>[ Book an audit ]</b> &nbsp; [ General enquiry ]</p>
+        <div class="form"><div>Name / business / email / phone</div><div>Site address (for on-site work)</div><div>Staff and number of sites (select)</div><div>Service interested in (select; preset from the page you came from)</div><div>Message</div></div>
+        <p class="note">Endpoint and calendar embed: open fog item "Contact/enquiry delivery". "We reply within one business day."</p>
+      </section>
+    </article>
+  </main>
+</div>
+</div>
+
 <div id="switcher" aria-label="Prototype variant switcher">
   <button id="prev" title="Previous (←)">←</button>
   <span id="label"></span>
