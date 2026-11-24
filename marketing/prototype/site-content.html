@@ -1,0 +1,421 @@
+<!doctype html>
+<!--
+  PROTOTYPE — throwaway. Wayfinder ticket: "What pages and content does the Marketing Site need?" (#5)
+  Three structurally different Marketing Site shapes (sitemap + page outlines + draft copy),
+  switchable via ?variant=A|B|C, the bottom bar, or ← / → keys.
+  Deliberately greyscale: final styling waits on "Create brand basics for Akimbo Technology".
+  Assumptions from the owner: sells managed networking, servers & virtualisation, network projects,
+  documentation & audits; first Customers are small businesses (10–100 staff, no in-house IT);
+  local on-site + remote; founder-led voice.  [Brackets] = placeholders to fill.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE · Marketing Site content</title>
+<style>
+  :root { --ink:#1a1a1a; --mute:#666; --line:#d6d6d6; --bg:#fafafa; --card:#fff; --hl:#ececec; }
+  * { box-sizing: border-box; }
+  body { margin:0; font: 16px/1.55 system-ui, sans-serif; color:var(--ink); background:var(--bg); padding-bottom:6rem; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem; display:grid; grid-template-columns: 260px 1fr; gap: 2rem; }
+  @media (max-width: 800px) { .wrap { grid-template-columns: 1fr; } }
+  aside { position: sticky; top: 1rem; align-self: start; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem; font-size:.9rem; }
+  aside h2 { font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; color:var(--mute); margin:0 0 .5rem; }
+  aside ul { list-style:none; margin:0; padding-left:0; }
+  aside ul ul { padding-left: 1rem; border-left:1px dashed var(--line); margin-left:.3rem; }
+  aside li { margin:.2rem 0; }
+  aside a { color:inherit; text-decoration:none; }
+  aside a:hover { text-decoration:underline; }
+  aside .pitch { margin-top:1rem; padding-top:.75rem; border-top:1px solid var(--line); color:var(--mute); }
+  .page { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-bottom:2rem; overflow:hidden; }
+  .page > header.url { background:var(--hl); padding:.4rem 1rem; font: 13px ui-monospace, monospace; color:var(--mute); border-bottom:1px solid var(--line); }
+  .page section { padding: 1.25rem 1.5rem; border-bottom:1px dashed var(--line); }
+  .page section:last-child { border-bottom:0; }
+  .tag { display:inline-block; font: 11px ui-monospace, monospace; text-transform:uppercase; letter-spacing:.06em; color:var(--mute); margin-bottom:.4rem; }
+  h1 { font-size:2rem; line-height:1.2; margin:.2rem 0 .6rem; }
+  h3 { font-size:1.15rem; margin:.2rem 0 .4rem; }
+  .btn { display:inline-block; border:2px solid var(--ink); padding:.45rem .9rem; border-radius:6px; font-weight:600; margin:.3rem .4rem 0 0; }
+  .btn.ghost { border-style:dashed; font-weight:400; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:1rem; }
+  .grid > div { border:1px solid var(--line); border-radius:6px; padding:.8rem; }
+  .steps { counter-reset: s; list-style:none; padding:0; }
+  .steps li { counter-increment:s; padding-left:2.2rem; position:relative; margin:.6rem 0; }
+  .steps li::before { content: counter(s); position:absolute; left:0; top:0; width:1.6rem; height:1.6rem; border:2px solid var(--ink); border-radius:50%; text-align:center; font-weight:700; font-size:.85rem; line-height:1.3rem; }
+  .note { font-size:.85rem; color:var(--mute); font-style:italic; }
+  .ph { background:#fff3c4; padding:0 .2rem; }
+  table { border-collapse: collapse; width:100%; font-size:.92rem; }
+  th, td { border:1px solid var(--line); padding:.45rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--hl); }
+  .form div { border:1px solid var(--line); border-radius:4px; padding:.5rem; margin:.35rem 0; color:var(--mute); }
+  [data-variant] { display:none; }
+  [data-variant].on { display:contents; }
+
+  /* switcher — not part of the design being evaluated */
+  #switcher { position:fixed; bottom:1rem; left:50%; transform:translateX(-50%); background:#111; color:#fff; border-radius:999px; padding:.4rem .6rem; display:flex; align-items:center; gap:.6rem; box-shadow:0 4px 18px rgba(0,0,0,.35); font: 14px system-ui, sans-serif; z-index:99; }
+  #switcher button { background:#333; color:#fff; border:0; border-radius:50%; width:2rem; height:2rem; font-size:1rem; cursor:pointer; }
+  #switcher button:hover { background:#555; }
+  #switcher span { min-width: 16rem; text-align:center; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- VARIANT A — Founder one-pager                                        -->
+<!-- ================================================================== -->
+<div data-variant="A" data-name="Founder one-pager">
+<div class="wrap">
+  <aside>
+    <h2>Sitemap · A</h2>
+    <ul>
+      <li><a href="#a-home">/</a> (single long page)
+        <ul>
+          <li>#services</li><li>#how-it-works</li><li>#portal</li><li>#about</li><li>#contact</li>
+        </ul>
+      </li>
+      <li>/privacy</li>
+      <li>/terms</li>
+      <li>↗ portal.akimbo.technology (Log in)</li>
+    </ul>
+    <p class="pitch"><b>Bet:</b> with no Customers, no case studies and one person, a short, personal page converts better than a pretend-corporate site. Cheapest to build and maintain; weakest for search (one page, few keywords).</p>
+  </aside>
+  <main>
+    <article class="page" id="a-home">
+      <header class="url">akimbo.technology/</header>
+      <section>
+        <span class="tag">Nav</span>
+        <p>Akimbo Technology · Services · How it works · About · <b>Contact</b> · <i>Client log in</i></p>
+      </section>
+      <section>
+        <span class="tag">Hero</span>
+        <h1>Your network, run by the engineer who built it.</h1>
+        <p>Akimbo Technology looks after the networks, servers and Wi-Fi behind small businesses in <span class="ph">[City/Region]</span>, so the internet stays up and someone actually knows how it all fits together.</p>
+        <span class="btn">Book a free 30-minute call</span><span class="btn ghost">See what's included ↓</span>
+      </section>
+      <section>
+        <span class="tag">Problem</span>
+        <h3>Sound familiar?</h3>
+        <ul>
+          <li>The Wi-Fi drops and nobody knows why.</li>
+          <li>The person who set it all up left, and took the passwords with them.</li>
+          <li>Your "IT guy" does laptops well, but the network room is a mystery.</li>
+          <li>You couldn't say what's in your server cupboard, how old it is, or if it's backed up.</li>
+        </ul>
+      </section>
+      <section id="services">
+        <span class="tag">Services (4 short blocks)</span>
+        <div class="grid">
+          <div><h3>Managed networking</h3>Firewalls, switches and Wi-Fi, monitored and kept up to date for a flat monthly fee.</div>
+          <div><h3>Servers &amp; virtualisation</h3>The servers your business runs on, plus their backups, set up properly and checked regularly.</div>
+          <div><h3>Network projects</h3>New office, office move, Wi-Fi that finally reaches the back room, a tidy rack. Fixed quote.</div>
+          <div><h3>Documentation &amp; audits</h3>We map everything you have and hand you a clear record of it, even if you never hire us again.</div>
+        </div>
+      </section>
+      <section id="how-it-works">
+        <span class="tag">How it works</span>
+        <ol class="steps">
+          <li><b>Talk.</b> A free call about what's bothering you.</li>
+          <li><b>Look.</b> An on-site visit and audit: we document every device, connection and IP address.</li>
+          <li><b>Fix.</b> A plain-English report and a fixed quote for anything urgent.</li>
+          <li><b>Run.</b> Optional monthly management: monitoring, updates, and one person to call.</li>
+        </ol>
+      </section>
+      <section id="portal">
+        <span class="tag">Differentiator · Client Portal</span>
+        <h3>You can see everything we manage, any time.</h3>
+        <p>Every Customer gets a login to the Akimbo Client Portal: your sites, racks, devices, circuits and IP addresses, always current. It's your record, not ours. If you ever leave, the documentation goes with you.</p>
+        <p class="note">Screenshot/mock of portal overview goes here once the portal exists.</p>
+      </section>
+      <section id="about">
+        <span class="tag">About the founder</span>
+        <p><span class="ph">[Photo]</span> Hi, I'm <span class="ph">[Founder name]</span>. I've spent <span class="ph">[N]</span> years as a network engineer at <span class="ph">[kind of orgs]</span>. I started Akimbo Technology so small businesses can get the same careful, documented infrastructure that big companies have. When you call, you get me.</p>
+        <p class="note">Credentials strip: <span class="ph">[certs e.g. CCNA/CCNP]</span> · insured · <span class="ph">[City]</span>-based LLC</p>
+      </section>
+      <section>
+        <span class="tag">Pricing stance (no numbers)</span>
+        <p>Flat monthly pricing based on what you have, quoted after the audit. No surprise invoices, no lock-in contracts.</p>
+      </section>
+      <section id="contact">
+        <span class="tag">Contact</span>
+        <div class="form"><div>Name</div><div>Business name</div><div>Email</div><div>Phone (optional)</div><div>What's going on? (textarea)</div></div>
+        <span class="btn">Send</span>
+        <p class="note">Form endpoint = open fog item "Contact/enquiry delivery". Also show email + phone + service area.</p>
+      </section>
+      <section>
+        <span class="tag">Footer</span>
+        <p>Akimbo Technology LLC · <span class="ph">[City, State]</span> · Privacy · Terms · Client log in</p>
+      </section>
+    </article>
+  </main>
+</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- VARIANT B — Services-led multi-page                                  -->
+<!-- ================================================================== -->
+<div data-variant="B" data-name="Services-led multi-page">
+<div class="wrap">
+  <aside>
+    <h2>Sitemap · B</h2>
+    <ul>
+      <li><a href="#b-home">/</a> Home</li>
+      <li><a href="#b-services">/services</a> (hub)
+        <ul>
+          <li><a href="#b-svc">/services/managed-networking</a></li>
+          <li>/services/servers-virtualisation</li>
+          <li>/services/network-projects</li>
+          <li>/services/documentation-audits</li>
+        </ul>
+      </li>
+      <li><a href="#b-portal">/client-portal</a></li>
+      <li><a href="#b-about">/about</a></li>
+      <li><a href="#b-contact">/contact</a></li>
+      <li>/privacy · /terms</li>
+      <li>↗ portal.akimbo.technology</li>
+    </ul>
+    <p class="pitch"><b>Bet:</b> small businesses find an MSP by searching "<span class="ph">[city]</span> network support" or "office Wi-Fi installer". One page per service gives search engines and readers somewhere specific to land. More copy to write; structure scales as services grow.</p>
+  </aside>
+  <main>
+    <article class="page" id="b-home">
+      <header class="url">akimbo.technology/</header>
+      <section>
+        <span class="tag">Nav</span>
+        <p>Services ▾ · Client Portal · About · <b>Contact</b> · <i>Log in</i></p>
+      </section>
+      <section>
+        <span class="tag">Hero</span>
+        <h1>Managed networks and servers for small businesses in <span class="ph">[City/Region]</span>.</h1>
+        <p>Reliable Wi-Fi, secure firewalls, backed-up servers, and documentation you can actually read.</p>
+        <span class="btn">Get a quote</span><span class="btn ghost">Explore services</span>
+      </section>
+      <section>
+        <span class="tag">Service tiles → each links to its page</span>
+        <div class="grid">
+          <div><h3>Managed networking →</h3>Ongoing monitoring and care.</div>
+          <div><h3>Servers &amp; virtualisation →</h3>Hosts, storage, backups.</div>
+          <div><h3>Network projects →</h3>Installs, moves, upgrades.</div>
+          <div><h3>Documentation &amp; audits →</h3>Know what you've got.</div>
+        </div>
+      </section>
+      <section>
+        <span class="tag">Why Akimbo (3 points)</span>
+        <div class="grid">
+          <div><b>Infrastructure specialists.</b> Networks and servers are all we do. We don't fix printers.</div>
+          <div><b>Everything documented.</b> Your whole setup recorded and visible in the Client Portal.</div>
+          <div><b>Local and remote.</b> On-site across <span class="ph">[region]</span>; remote support anywhere.</div>
+        </div>
+      </section>
+      <section>
+        <span class="tag">CTA band</span>
+        <p><b>Not sure where to start?</b> Most Customers begin with an audit. <span class="btn">Book an audit</span></p>
+      </section>
+    </article>
+
+    <article class="page" id="b-services">
+      <header class="url">akimbo.technology/services</header>
+      <section>
+        <span class="tag">Hub</span>
+        <h3>Services</h3>
+        <p>Pick the one that fits, or let us suggest a mix after an audit. Each row: a one-line summary, a "good fit if…" line, and a link.</p>
+        <table>
+          <tr><th>Service</th><th>Good fit if…</th><th>Billing</th></tr>
+          <tr><td>Managed networking</td><td>You want someone watching the network so you don't have to.</td><td>Monthly</td></tr>
+          <tr><td>Servers &amp; virtualisation</td><td>You run on-site servers or aren't sure your backups work.</td><td>Monthly</td></tr>
+          <tr><td>Network projects</td><td>You're moving, expanding, or fixing one big problem.</td><td>Fixed quote</td></tr>
+          <tr><td>Documentation &amp; audits</td><td>You don't know what you have.</td><td>Fixed price</td></tr>
+        </table>
+      </section>
+    </article>
+
+    <article class="page" id="b-svc">
+      <header class="url">akimbo.technology/services/managed-networking <span class="note">(template; same shape for all 4)</span></header>
+      <section>
+        <span class="tag">Service hero</span>
+        <h1>Managed networking</h1>
+        <p>Your firewall, switches and Wi-Fi, monitored, patched and looked after for a flat monthly fee.</p>
+      </section>
+      <section>
+        <span class="tag">What's included</span>
+        <ul><li>24/7 monitoring with alerts to us, not you</li><li>Firmware and security updates</li><li>Configuration backups</li><li>Remote fixes; on-site visits in <span class="ph">[region]</span></li><li>Up-to-date documentation in your Client Portal</li></ul>
+      </section>
+      <section>
+        <span class="tag">Who it's for / not for</span>
+        <p>For businesses with 10–100 staff and one or more offices. Not a fit if you need desktop/helpdesk support: we can recommend partners.</p>
+      </section>
+      <section>
+        <span class="tag">FAQ (3–5)</span>
+        <p>Do I need to replace my equipment? · What happens when something breaks at 2am? · Is there a contract?</p>
+      </section>
+      <section><span class="tag">CTA</span><span class="btn">Get a quote for managed networking</span></section>
+    </article>
+
+    <article class="page" id="b-portal">
+      <header class="url">akimbo.technology/client-portal</header>
+      <section>
+        <span class="tag">Feature page</span>
+        <h3>See your infrastructure, any time</h3>
+        <p>Every Customer gets a login to view their sites, racks, devices, circuits, IP addresses and VLANs: the same records we work from. Read-only, always current, and yours to keep.</p>
+        <p class="note">Annotated screenshots: overview, device detail, IP list. Button: "Customer log in →".</p>
+      </section>
+    </article>
+
+    <article class="page" id="b-about">
+      <header class="url">akimbo.technology/about</header>
+      <section>
+        <span class="tag">About</span>
+        <p><span class="ph">[Photo]</span> Akimbo Technology is run by <span class="ph">[Founder name]</span>, a network engineer with <span class="ph">[N]</span> years of experience. Short story, values (document everything, plain English, no lock-in), credentials, service area map.</p>
+      </section>
+    </article>
+
+    <article class="page" id="b-contact">
+      <header class="url">akimbo.technology/contact</header>
+      <section>
+        <span class="tag">Contact</span>
+        <div class="form"><div>Name</div><div>Business</div><div>Email</div><div>Phone</div><div>Service interested in (select)</div><div>Number of staff / sites (select)</div><div>Message</div></div>
+        <p class="note">Also: email, phone, hours, service area. "We reply within one business day."</p>
+      </section>
+    </article>
+  </main>
+</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- VARIANT C — Audit-first funnel                                       -->
+<!-- ================================================================== -->
+<div data-variant="C" data-name="Audit-first funnel">
+<div class="wrap">
+  <aside>
+    <h2>Sitemap · C</h2>
+    <ul>
+      <li><a href="#c-home">/</a> Home (sells the audit)</li>
+      <li><a href="#c-audit">/network-audit</a> (the entry offer)</li>
+      <li><a href="#c-plans">/plans</a> (managed tiers + projects)</li>
+      <li><a href="#c-how">/how-we-work</a> (documentation + portal)</li>
+      <li>/about</li>
+      <li><a href="#c-book">/book</a> (booking/enquiry)</li>
+      <li>/privacy · /terms</li>
+      <li>↗ portal.akimbo.technology</li>
+    </ul>
+    <p class="pitch"><b>Bet:</b> "hire a managed provider" is a big ask from a stranger with no reviews. A fixed-price audit is a small, low-risk first step that shows the work, fills NetBox with the Customer's real infrastructure from day one, and leads into a monthly plan. Commits you to publishing at least one price.</p>
+  </aside>
+  <main>
+    <article class="page" id="c-home">
+      <header class="url">akimbo.technology/</header>
+      <section>
+        <span class="tag">Nav</span>
+        <p>Network Audit · Plans · How we work · About · <b>Book an audit</b> · <i>Log in</i></p>
+      </section>
+      <section>
+        <span class="tag">Hero</span>
+        <h1>Find out what's really in your network closet.</h1>
+        <p>A fixed-price infrastructure audit for small businesses in <span class="ph">[City/Region]</span>. We document every device, cable and IP address, flag what's risky, and hand you the results, whether or not you hire us afterwards.</p>
+        <span class="btn">Book an audit · <span class="ph">[$X]</span></span><span class="btn ghost">What you get ↓</span>
+      </section>
+      <section>
+        <span class="tag">What you get (deliverables)</span>
+        <div class="grid">
+          <div><b>A full inventory</b>: every firewall, switch, access point and server.</div>
+          <div><b>A risk report</b> in plain English, ranked by urgency.</div>
+          <div><b>A Client Portal login</b> with your documented network, yours to keep.</div>
+          <div><b>A fixed quote</b> to fix what matters, with no obligation.</div>
+        </div>
+      </section>
+      <section>
+        <span class="tag">Then what?</span>
+        <p>Most businesses fix one or two urgent things, then choose a monthly plan so it stays that way. <span class="btn ghost">See plans</span></p>
+      </section>
+      <section>
+        <span class="tag">Trust strip (no reviews yet)</span>
+        <p>Run by <span class="ph">[Founder name]</span>, <span class="ph">[N]</span>-year network engineer · <span class="ph">[certs]</span> · insured LLC · No lock-in.</p>
+      </section>
+    </article>
+
+    <article class="page" id="c-audit">
+      <header class="url">akimbo.technology/network-audit</header>
+      <section>
+        <span class="tag">Offer detail</span>
+        <h3>The Akimbo Network Audit: <span class="ph">[$X]</span> for up to <span class="ph">[N]</span> devices / 1 site</h3>
+        <ol class="steps">
+          <li>Short call to scope it.</li>
+          <li>Half-day on-site visit <span class="ph">[or remote for small setups]</span>.</li>
+          <li>Report + portal login within <span class="ph">[5]</span> business days.</li>
+          <li>Walk-through call to go over the findings.</li>
+        </ol>
+        <p>FAQ: Will you disrupt my staff? · Do you need passwords? · What if you find something urgent?</p>
+      </section>
+    </article>
+
+    <article class="page" id="c-plans">
+      <header class="url">akimbo.technology/plans</header>
+      <section>
+        <span class="tag">Plans (tier names/prices TBD)</span>
+        <table>
+          <tr><th></th><th>Essentials</th><th>Managed</th><th>Managed + Servers</th></tr>
+          <tr><td>Monitoring &amp; alerts</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Updates &amp; config backups</td><td>Quarterly</td><td>Monthly</td><td>Monthly</td></tr>
+          <tr><td>Remote support</td><td>Business hours</td><td>Business hours</td><td>Extended</td></tr>
+          <tr><td>On-site visits</td><td>Billed</td><td><span class="ph">[N]</span>/yr included</td><td><span class="ph">[N]</span>/yr included</td></tr>
+          <tr><td>Servers, virtualisation &amp; backups</td><td></td><td></td><td>✓</td></tr>
+          <tr><td>Client Portal</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Price</td><td>from <span class="ph">[$]</span>/mo</td><td>from <span class="ph">[$]</span>/mo</td><td>from <span class="ph">[$]</span>/mo</td></tr>
+        </table>
+        <p><b>Projects</b> (installs, moves, upgrades) are quoted separately at a fixed price.</p>
+      </section>
+    </article>
+
+    <article class="page" id="c-how">
+      <header class="url">akimbo.technology/how-we-work</header>
+      <section>
+        <span class="tag">Principles + portal</span>
+        <ul>
+          <li><b>Documented first.</b> Nothing gets changed without being recorded.</li>
+          <li><b>Visible to you.</b> Your Client Portal shows exactly what we manage.</li>
+          <li><b>No hostage-taking.</b> Your passwords and documentation are yours. Leave any time.</li>
+          <li><b>Plain English.</b> Reports you can forward to your accountant.</li>
+        </ul>
+      </section>
+    </article>
+
+    <article class="page" id="c-book">
+      <header class="url">akimbo.technology/book</header>
+      <section>
+        <span class="tag">Booking</span>
+        <div class="form"><div>Name / business / email / phone</div><div>Address of site (for on-site)</div><div>Rough size: staff, # of sites</div><div>What prompted this? (optional)</div></div>
+        <p class="note">Could be a calendar embed (Cal.com etc.) instead: depends on "Contact/enquiry delivery".</p>
+      </section>
+    </article>
+  </main>
+</div>
+</div>
+
+<div id="switcher" aria-label="Prototype variant switcher">
+  <button id="prev" title="Previous (←)">←</button>
+  <span id="label"></span>
+  <button id="next" title="Next (→)">→</button>
+</div>
+
+<script>
+  const variants = [...document.querySelectorAll('[data-variant]')];
+  const keys = variants.map(v => v.dataset.variant);
+  function show(key) {
+    if (!keys.includes(key)) key = keys[0];
+    variants.forEach(v => v.classList.toggle('on', v.dataset.variant === key));
+    const v = variants.find(v => v.dataset.variant === key);
+    document.getElementById('label').textContent = `${key} (${v.dataset.name})`;
+    const u = new URL(location.href); u.searchParams.set('variant', key); u.hash = '';
+    history.replaceState(null, '', u);
+    window.scrollTo(0, 0);
+    return key;
+  }
+  let cur = show(new URLSearchParams(location.search).get('variant') || 'A');
+  const step = d => { cur = show(keys[(keys.indexOf(cur) + d + keys.length) % keys.length]); };
+  document.getElementById('prev').onclick = () => step(-1);
+  document.getElementById('next').onclick = () => step(1);
+  addEventListener('keydown', e => {
+    const t = e.target;
+    if (t.closest && (t.closest('input,textarea,[contenteditable]'))) return;
+    if (e.key === 'ArrowLeft') step(-1);
+    if (e.key === 'ArrowRight') step(1);
+  });
+</script>
+</body>
+</html>
