@@ -24,6 +24,10 @@ _Avoid_: Contract, package, subscription
 A person who logs into the Client Portal on behalf of exactly one Customer.
 _Avoid_: User, login, account
 
+**MSP Staff**:
+The people who operate Akimbo Technology and its systems (today, only the founder), as distinct from Portal Users.
+_Avoid_: Admin, operator, employee
+
 **Marketing Site**:
 The public, unauthenticated part of the website describing the MSP's services.
 _Avoid_: Homepage, landing site
