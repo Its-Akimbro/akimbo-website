@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" width="2048" height="2048">
+  <defs>
+    <linearGradient id="swoosh-top-grad" x1="25%" y1="80%" x2="85%" y2="20%">
+      <stop offset="0%" stop-color="#e21a26" />
+      <stop offset="45%" stop-color="#c41524" />
+      <stop offset="75%" stop-color="#dc1926" />
+      <stop offset="100%" stop-color="#d21825" />
+    </linearGradient>
+    <linearGradient id="swoosh-bottom-grad" x1="15%" y1="90%" x2="90%" y2="25%">
+      <stop offset="0%" stop-color="#c41626" />
+      <stop offset="38%" stop-color="#7c0d24" />
+      <stop offset="68%" stop-color="#a81424" />
+      <stop offset="100%" stop-color="#c81726" />
+    </linearGradient>
+  </defs>
+
+  
+  <g id="background-layer">
+    <rect id="background" width="2048" height="2048" fill="#0c203a" />
+  </g>
+
+  
+  <g id="logo-mark" transform="translate(-11.8, 540.4) scale(0.4685)">
+    <g id="white-leg">
+      <path d="M 1168.5 537 L 1352 882 L 1141 1015 L 1028 799 Z" fill="#e6e4e2" />
+      <path d="M 1235 1192 L 1458 1042 L 1482 1088 L 1270 1254 Z" fill="#d3d0ce" />
+      <path d="M 1270 1254 L 1482 1088 L 1691 1527 L 1488 1527 C 1445 1527 1422 1515 1404 1482 Z" fill="#fefefe" />
+    </g>
+    <g id="blue-leg">
+      <path d="M 847 600 C 875 552 912 537 970 537 L 1024 537 L 700 1138 L 513 1222 Z" fill="#2759b5" />
+      <path d="M 1024 537 L 1168.5 537 L 1028 799 L 875 1084 L 700 1138 Z" fill="#193d8b" />
+      <path d="M 513 1222 L 700 1138 L 656 1220 L 462 1318 Z" fill="#204696" />
+      <path d="M 700 1138 L 875 1084 L 832 1167 L 656 1220 Z" fill="#173576" />
+    </g>
+    <g id="red-swoosh">
+      <path d="M 462 1318 C 820 1160 1365 895 1455 765 C 1495 705 1410 672 1262 665 C 1455 662 1605 705 1600 800 C 1595 905 1345 1095 765 1365 L 408 1420 Z" fill="url(#swoosh-top-grad)" />
+      <path d="M 408 1420 L 765 1365 C 1345 1095 1595 905 1600 800 C 1602 895 1475 1055 1185 1235 C 975 1365 765 1465 653 1527 L 356 1527 Z" fill="url(#swoosh-bottom-grad)" />
+    </g>
+  </g>
+
+  
+  <g id="wordmark" font-family="&#39;Montserrat&#39;, &#39;Gotham&#39;, &#39;Proxima Nova&#39;, &#39;Segoe UI&#39;, &#39;Helvetica Neue&#39;, Arial, sans-serif">
+    <text x="858" y="1002" fill="#ffffff" font-size="192" font-weight="800" letter-spacing="4">AKIMBO</text>
+    <text x="862" y="1142" fill="#ffffff" font-size="114" font-weight="700" letter-spacing="4.5">TECHNOLOGY</text>
+    <text x="864" y="1244" fill="#42afd4" font-size="63" font-weight="700" letter-spacing="4.5">MANAGED IT SERVICES</text>
+  </g>
+</svg>
