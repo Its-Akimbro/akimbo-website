@@ -15,6 +15,8 @@ export function placeholder(what: string): string {
 }
 
 export const FOUNDER_NAME = placeholder("Founder name");
+/** Shown in place of the founder's photo until there is one. */
+export const FOUNDER_PHOTO = placeholder("Founder photo");
 export const FOUNDER_STORY = placeholder(
   "Founder story: where you've worked and the kinds of networks you've looked after",
 );

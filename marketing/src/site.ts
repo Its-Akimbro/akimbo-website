@@ -22,6 +22,7 @@ export const AUDIT_CTA = { label: "Book a network audit", href: "/contact/" };
  * so the nav never links to a page that doesn't exist.
  */
 export const NAV: { label: string; href: string }[] = [
+  { label: "Services", href: "/services/" },
   { label: "Plans", href: "/plans/" },
   { label: "How we work", href: "/how-we-work/" },
   { label: "About", href: "/about/" },

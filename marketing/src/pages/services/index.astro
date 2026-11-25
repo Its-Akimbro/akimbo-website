@@ -1,0 +1,68 @@
+---
+import AuditCta from "../../components/AuditCta.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { SERVICE_SUMMARIES } from "../../service-summaries";
+---
+
+<BaseLayout
+  title="Services"
+  description="Network audits, managed networking, servers and virtualisation, and network projects for small businesses. See which fits and how each is billed."
+>
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <h1>Services</h1>
+      <p class="mt-4 max-w-2xl text-lg">
+        Pick the one that fits, or start with an audit and we'll suggest a mix based on what we find.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="all-services" class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <h2 id="all-services" class="sr-only">All services</h2>
+    <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200">
+      {
+        SERVICE_SUMMARIES.map((service, i) => (
+          <li
+            class:list={[
+              "grid gap-4 p-6 md:grid-cols-[1fr_1.5fr_1fr] md:gap-8",
+              i === 0 && "bg-slate-50",
+            ]}
+          >
+            <div>
+              {i === 0 && (
+                <p class="mb-1 text-sm font-semibold tracking-wide text-muted uppercase">Start here</p>
+              )}
+              <h3>
+                <a href={service.href} class="text-navy underline hover:no-underline">
+                  {service.name}
+                </a>
+              </h3>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-muted">A good fit if…</h4>
+              <p class="mt-1">{service.fit}</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-muted">How it's billed</h4>
+              <p class="mt-1">{service.billing}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="mt-6">
+      <a href="/plans/" class="font-semibold text-blue underline hover:text-blue-dark">See Plans and prices</a>
+    </p>
+  </section>
+
+  <section class="border-t border-slate-200 bg-slate-50">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-4 px-4 py-12 sm:px-6">
+      <h2>Not sure where to start?</h2>
+      <p class="max-w-2xl">
+        Most clients begin with a fixed-price network audit. You get your network documented and a plain-English report
+        that's yours to keep, whether or not you hire us.
+      </p>
+      <AuditCta />
+    </div>
+  </section>
+</BaseLayout>
