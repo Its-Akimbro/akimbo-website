@@ -1,6 +1,6 @@
 // Seam 2: the built site. Reads Astro's static output in dist/ (run
 // `pnpm build` first) and answers questions a visitor could observe.
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeType, parse, type HTMLElement, type Node } from "node-html-parser";
@@ -16,6 +16,30 @@ export const DIST = join(dirname(fileURLToPath(import.meta.url)), "../../dist/")
 
 if (!existsSync(join(DIST, "index.html"))) {
   throw new Error(`No built site at ${DIST}. Run \`pnpm build\` first.`);
+}
+
+/** What the build reads: a change to any of these makes dist/ stale. */
+const BUILD_INPUTS = ["src", "../brand", "astro.config.mjs"].map((path) =>
+  join(DIST, "..", path),
+);
+
+/** The newest file under `path`, by modification time. */
+function newest(path: string): { file: string; mtime: number } {
+  const stat = statSync(path);
+  if (!stat.isDirectory()) return { file: path, mtime: stat.mtimeMs };
+  return readdirSync(path)
+    .map((name) => newest(join(path, name)))
+    .reduce((a, b) => (b.mtime > a.mtime ? b : a), { file: path, mtime: 0 });
+}
+
+// Tests over an old build fail as if the code were wrong. Astro rewrites
+// dist/index.html on every build, so its age is the build's age.
+const builtAt = statSync(join(DIST, "index.html")).mtimeMs;
+const changed = BUILD_INPUTS.map((path) => newest(path)).find((input) => input.mtime > builtAt);
+if (changed) {
+  throw new Error(
+    `dist/ is older than ${relative(join(DIST, ".."), changed.file)}. Run \`pnpm build\` first.`,
+  );
 }
 
 /** Every file in dist/, as a site path ("/", "/plans/", "/favicon.svg"). */

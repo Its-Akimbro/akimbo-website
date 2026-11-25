@@ -8,6 +8,7 @@ import {
   SEND_FAILED,
   TURNSTILE_FIELD,
 } from "./contact-form";
+import { ERROR_TEXT } from "./error-styles";
 import { isServiceSlug, type ServiceSlug } from "./services";
 import { CONTACT_EMAIL } from "./site";
 
@@ -206,7 +207,7 @@ function alertElement(doc: Document, id: string): HTMLElement {
   const alert = doc.createElement("p");
   alert.id = id;
   alert.setAttribute("role", "alert");
-  alert.className = "text-sm font-medium text-red-dark empty:sr-only";
+  alert.className = `${ERROR_TEXT} empty:sr-only`;
   return alert;
 }
 
@@ -304,7 +305,7 @@ function showFieldErrors(form: HTMLFormElement, errors: FieldErrors): Control[] 
         error = doc.createElement("p");
         error.id = id;
         error.dataset.fieldError = "";
-        error.className = "mt-1 text-sm font-medium text-red-dark";
+        error.className = `mt-1 ${ERROR_TEXT}`;
         control.after(error);
       }
       error.textContent = message;

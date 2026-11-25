@@ -24,7 +24,7 @@ pnpm install
 | --- | --- |
 | `pnpm dev` | Astro dev server with hot reload, for working on pages. It doesn't run the Worker. |
 | `pnpm build` | Builds the static site into `dist/`. No server code is emitted. |
-| `pnpm preview` | Builds, then runs the Marketing Worker locally with `wrangler dev`, serving `dist/` as static assets the way production does. |
+| `pnpm preview` | Builds, then runs the Marketing Worker locally with `wrangler dev`, serving `dist/` as static assets the way production does. `/api/contact` needs test secrets in `marketing/.dev.vars`; the `run-site` skill (`.claude/skills/run-site/`) has the values and the checks to run. |
 
 To try the `www` redirect locally: `curl -i -H 'Host: www.akimbo.technology' http://localhost:8787/`.
 
@@ -40,8 +40,9 @@ Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which 
 | --- | --- |
 | `pnpm lint` | ESLint over the site, Worker and tests. |
 | `pnpm typecheck` | `astro check`, covering `.astro` and TypeScript files (Worker and tests included). |
+| `pnpm test:unit` | Plain modules, such as the pricing data and the brand red rule (red only on the audit CTA and error styles, `src/error-styles.ts`). |
 | `pnpm test:worker` | **Seam 1.** Calls the Worker's fetch handler with built `Request`s and a test environment of fakes (`test/worker/harness.ts`). |
-| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin; every placeholder is marked `[TBD: …]`; About has a self-hosted service-area map; the legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. **Seam 3** runs in the same project: `test/site/contact-page.test.ts` loads the built `/contact` page into happy-dom, runs the contact page script (`src/contact-page.ts`) on it, and sends its requests to the Worker's fetch handler. It covers the tabs and their keys, the `?service=` preset, inline validation and the in-page results. Run `pnpm build` first. |
+| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin; every placeholder is marked `[TBD: …]`; About has a self-hosted service-area map; the legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. **Seam 3** runs in the same project: `test/site/contact-page.test.ts` loads the built `/contact` page into happy-dom, runs the contact page script (`src/contact-page.ts`) on it, and sends its requests to the Worker's fetch handler. It covers the tabs and their keys, the `?service=` preset, inline validation and the in-page results. Run `pnpm build` first; the suite refuses a `dist/` older than its sources. |
 | `pnpm test` | All the test suites. |
 | `pnpm check:bundle` | Bundles the Worker with `wrangler deploy --dry-run`, the way a release uploads it, without deploying. Run `pnpm build` first. Vitest bundles through Vite, which can load files (such as `.svg`) that wrangler can't, so this check catches a Worker import that only works under test. |
 
