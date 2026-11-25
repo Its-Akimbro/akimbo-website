@@ -63,7 +63,7 @@ Two workflows run on every PR:
 
 ### Dependencies
 
-Dependabot (`.github/dependabot.yml`) opens one grouped PR a week for the pnpm dependencies in `marketing/` and one for GitHub Actions, plus grouped security PRs as soon as an advisory lands. Security fixes ship within 7 days.
+Dependabot (`.github/dependabot.yml`) opens one grouped PR a week for minor and patch updates to the pnpm dependencies in `marketing/`, and one for GitHub Actions. Each major update gets its own PR, and grouped security PRs open as soon as an advisory lands. TypeScript majors are ignored until typescript-eslint and `astro check` support TypeScript 7. Security fixes ship within 7 days.
 
 ### Release
 
