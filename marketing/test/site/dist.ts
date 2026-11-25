@@ -3,7 +3,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parse, type HTMLElement } from "node-html-parser";
+import { NodeType, parse, type HTMLElement, type Node } from "node-html-parser";
 
 export const SITE_ORIGIN = "https://akimbo.technology";
 /** The Client Portal is a separate app on its own hostname (ADR 0001, ADR 0005). */
@@ -63,6 +63,45 @@ export function pages(): Page[] {
       path: file.replace(/index\.html$/, ""),
       html: parse(readFileSync(join(DIST, file), "utf8")),
     }));
+}
+
+/** The built page at a site path ("/plans/"); throws if there isn't one. */
+export function page(path: string): Page {
+  const found = pages().find((candidate) => candidate.path === path);
+  if (!found) throw new Error(`No built page at ${path}`);
+  return found;
+}
+
+/**
+ * An element's visible text, whitespace collapsed. Text nodes are joined with
+ * a space, so adjacent table cells ("$575" then "3 extra…") don't run together.
+ */
+export function text(el: HTMLElement): string {
+  const nodes = (node: Node): string[] =>
+    node.nodeType === NodeType.TEXT_NODE
+      ? [node.textContent]
+      : ["SCRIPT", "STYLE"].includes((node as HTMLElement).tagName)
+        ? []
+        : node.childNodes.flatMap(nodes);
+  return nodes(el).join(" ").replace(/\s+/g, " ").trim();
+}
+
+/** Every dollar amount in some text ("$1,250" → 1250). */
+export function dollarAmounts(content: string): number[] {
+  return [...content.matchAll(/\$(\d[\d,]*)/g)].map((m) => Number(m[1].replaceAll(",", "")));
+}
+
+/**
+ * The region (an element with aria-labelledby) whose labelling heading's
+ * text starts with `heading`; throws if there isn't one.
+ */
+export function region(page: Page, heading: string): HTMLElement {
+  const found = page.html.querySelectorAll("[aria-labelledby]").find((el) => {
+    const label = page.html.getElementById(el.getAttribute("aria-labelledby")!);
+    return label && text(label).startsWith(heading);
+  });
+  if (!found) throw new Error(`No region headed "${heading}" on ${page.path}`);
+  return found;
 }
 
 /** Whether a URL is served by this site (including `www`). */
