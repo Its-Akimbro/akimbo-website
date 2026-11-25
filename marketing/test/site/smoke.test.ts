@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { isServiceSlug } from "../../src/services";
 import {
   DIST,
   internalReferences,
@@ -148,5 +149,16 @@ describe("built site", () => {
     });
 
     expect(problems).toEqual([]);
+  });
+
+  it("only presets an allow-listed service on contact links", () => {
+    const bad = pages().flatMap((page) =>
+      links(page)
+        .filter((link) => isSitePath(link.url, "/contact") && link.url.searchParams.has("service"))
+        .filter((link) => !isServiceSlug(link.url.searchParams.get("service")))
+        .map((link) => `${page.path} → ${link.url.search}`),
+    );
+
+    expect(bad).toEqual([]);
   });
 });

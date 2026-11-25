@@ -1,6 +1,7 @@
 ---
 import AuditCta from "../components/AuditCta.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { count, EXIT_HANDOVER } from "../pricing";
 
 const principles = [
   {
@@ -14,7 +15,7 @@ const principles = [
     title: "No hostage-taking",
     body: [
       "Your network documentation, configurations and admin credentials belong to you. We never hold them back to keep your business.",
-      "Plans are month-to-month with no exit fee. If you leave, we hand over your documentation, configurations and admin credentials so your next provider can pick up where we left off. Leaving should be boring.",
+      `Plans are month-to-month with no exit fee. If you leave, we hand over your documentation, configurations and admin credentials within ${EXIT_HANDOVER.withinBusinessDays} business days, and spend up to ${count(EXIT_HANDOVER.hoursWithNextProvider, "hour", "hours")} with your next provider. Leaving should be boring.`,
     ],
   },
   {
