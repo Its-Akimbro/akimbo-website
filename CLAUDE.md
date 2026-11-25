@@ -16,9 +16,9 @@ Through a PR only: push the branch, `gh pr create`, wait for `gh pr checks <n> -
 
 Default five-role vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
-### Effort for tdd and code-review
+### Effort for tdd, code-review and retro
 
-Run the `tdd` and `code-review` skills at `high` effort, including when another skill (such as `/implement` or `/implement-spec`) calls them. Pass `effort: "high"` on every subagent they spawn, and give `high` as the level when invoking the built-in `/code-review`.
+Run the `tdd`, `code-review` and `retro` skills at `high` effort, including when another skill (such as `/implement` or `/implement-spec`) calls them. Pass `effort: "high"` on every subagent they spawn, and give `high` as the level when invoking the built-in `/code-review`.
 
 ### Domain docs
 
