@@ -1,7 +1,7 @@
 // Copy for the three pages on the shared service-page template
 // (src/components/ServicePage.astro). The Network Audit has its own page.
 // What each Plan tier includes follows the pricing decision (issue #14).
-// Numbers belong in the pricing module, so none are written here.
+// Prices belong in the pricing module (#32), so none are written here.
 import type { ServiceSlug } from "./services";
 
 export interface ServicePageContent {
@@ -36,15 +36,15 @@ export const SERVICE_PAGES: ServicePageContent[] = [
     ],
     notForYou: [
       "You need desktop, laptop or help-desk support. We only look after networks, servers and virtualisation.",
-      "You need a guaranteed 24/7 response. Alerts are answered in support hours, and out of hours on a best-effort basis.",
+      "You need a guaranteed 24/7 response. Alerts are answered in support hours, and out of hours on a best-effort basis on Managed and above.",
     ],
     pricing:
-      "Managed networking comes with every Plan. Essentials covers monitoring, updates and backups, with fixes billed by the hour. Managed adds fault fixes, routine changes and firewall management. Plans are priced per site, by the number of network devices.",
+      "Managed networking comes with every Plan. Essentials covers monitoring, updates and configuration backups, with fixes billed by the hour. Managed adds fault fixes, routine changes and firewall management. Plans are priced per site, by the number of network devices.",
   },
   {
     slug: "servers-virtualisation",
     summary:
-      "The servers and virtual machines your business runs on, patched, watched and backed up, with restores that are actually tested.",
+      "The servers and virtual machines your business runs on, patched and watched, with backups checked and restores actually tested.",
     included: [
       "Operating system and hypervisor patching",
       "Health monitoring for servers and hosts",

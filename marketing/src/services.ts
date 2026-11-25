@@ -1,6 +1,6 @@
 // The services Akimbo sells, keyed by slug. This is the one allow-list of
 // service slugs: service pages put the slug in their contact link
-// (`/contact/?service=<slug>`), and the Marketing Worker imports it to
+// (`/contact/?service=<slug>`), and the Marketing Worker will import it to
 // validate the `service` field on `/api/contact`. Keep it free of page copy
 // so the Worker bundle stays small.
 
@@ -12,8 +12,6 @@ export const SERVICES = {
 } as const satisfies Record<string, { name: string }>;
 
 export type ServiceSlug = keyof typeof SERVICES;
-
-export const SERVICE_SLUGS = Object.keys(SERVICES) as ServiceSlug[];
 
 /** Whether an untrusted value (a form field, a query string) is an allow-listed service slug. */
 export function isServiceSlug(value: unknown): value is ServiceSlug {
