@@ -8,7 +8,8 @@
  *   @import "<path to>/brand/theme.css";
  *
  * Rules:
- * - Red is for the "Book a network audit" CTA only.
+ * - Red is for the "Book a network audit" CTA, and red-dark also for error
+ *   messages and invalid fields. Nothing else is red.
  * - Red and blue are never used as text on navy.
  * - Light mode only.
  *
@@ -49,7 +50,7 @@
   --color-blue: #2859b6; /* links, primary buttons */
   --color-blue-dark: #193d8b; /* link and button hover */
   --color-red: #dc1927; /* the audit CTA only */
-  --color-red-dark: #b3141f; /* audit CTA hover */
+  --color-red-dark: #b3141f; /* audit CTA hover; error messages and invalid fields */
   --color-muted: #475569; /* muted text */
 
   /* Fonts. */
