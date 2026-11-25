@@ -39,12 +39,9 @@ describe("built site", () => {
   });
 
   it("shows an effective date on every legal page", () => {
-    const missing = LEGAL_PATHS.filter((path) => {
-      const time = pageAt(path).html.querySelector("main time[datetime]");
-      const datetime = time?.getAttribute("datetime") ?? "";
-      const label = time?.parentNode?.textContent ?? "";
-      return !/^\d{4}-\d{2}-\d{2}$/.test(datetime) || !/effective/i.test(label);
-    });
+    const missing = LEGAL_PATHS.filter(
+      (path) => !/Effective date:? [A-Z][a-z]+ \d{1,2}, \d{4}/.test(mainText(pageAt(path))),
+    );
 
     expect(missing).toEqual([]);
   });
@@ -57,9 +54,8 @@ describe("built site", () => {
     expect(missing).toEqual([]);
   });
 
-  it("has a Privacy Policy that covers what the ticket and spec require", () => {
-    const privacy = pageAt("/privacy/");
-    const text = mainText(privacy);
+  it("has a Privacy Policy naming its processors, retention periods and cookie use", () => {
+    const text = mainText(pageAt("/privacy/"));
     // Each item must appear in the policy (#37, spec #28).
     const required: [string, RegExp][] = [
       ["names Cloudflare", /Cloudflare/],
@@ -80,12 +76,9 @@ describe("built site", () => {
     const missing = required.filter(([, pattern]) => !pattern.test(text)).map(([what]) => what);
 
     // No state or EU rights sections that would promise processes Akimbo doesn't run.
-    const rightsHeadings = privacy.html
-      .querySelectorAll("main h2, main h3")
-      .map((heading) => heading.textContent)
-      .filter((heading) => /CCPA|CPRA|GDPR|California|European/i.test(heading));
+    const rightsLaws = text.match(/\b(CCPA|CPRA|GDPR)\b/g) ?? [];
 
-    expect({ missing, rightsHeadings }).toEqual({ missing: [], rightsHeadings: [] });
+    expect({ missing, rightsLaws }).toEqual({ missing: [], rightsLaws: [] });
   });
 
   it("has a page for every sitemap URL", () => {

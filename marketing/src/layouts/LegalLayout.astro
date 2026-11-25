@@ -1,16 +1,20 @@
 ---
 // The layout for the legal pages: title, effective date, the draft notice
 // and readable long-form text. Each page supplies its own sections.
+// The pages are drafts until the NC attorney review in the launch ticket
+// (#43); remove the notice and update each date when the reviewed versions
+// are published.
 import BaseLayout from "./BaseLayout.astro";
-import { LEGAL_EFFECTIVE_DATE } from "../site";
 
 interface Props {
   title: string;
   description: string;
+  /** When this document's current version took effect, as an ISO date ("2026-11-24"). */
+  effectiveDate: string;
 }
 
-const { title, description } = Astro.props;
-const effectiveDate = new Date(`${LEGAL_EFFECTIVE_DATE}T00:00:00Z`).toLocaleDateString("en-US", {
+const { title, description, effectiveDate } = Astro.props;
+const effectiveDateText = new Date(`${effectiveDate}T00:00:00Z`).toLocaleDateString("en-US", {
   year: "numeric",
   month: "long",
   day: "numeric",
@@ -24,7 +28,7 @@ const effectiveDate = new Date(`${LEGAL_EFFECTIVE_DATE}T00:00:00Z`).toLocaleDate
   >
     <h1>{title}</h1>
     <p class="text-muted">
-      Effective date: <time datetime={LEGAL_EFFECTIVE_DATE}>{effectiveDate}</time>
+      Effective date: <time datetime={effectiveDate}>{effectiveDateText}</time>
     </p>
     <aside
       aria-label="Draft notice"

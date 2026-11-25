@@ -6,6 +6,7 @@ import { CONTACT_EMAIL, LEGAL_NAME, MAILING_ADDRESS } from "../site";
 <LegalLayout
   title="Accessibility statement"
   description="Akimbo Technology's accessibility statement and how to report a barrier."
+  effectiveDate="2026-11-24"
 >
   <p>
     {LEGAL_NAME} wants everyone to be able to use this website, including people who use a
@@ -29,16 +30,17 @@ import { CONTACT_EMAIL, LEGAL_NAME, MAILING_ADDRESS } from "../site";
     </li>
     <li>We check the contrast of our text and background colour pairs against WCAG AA.</li>
     <li>
-      Our contact form doesn’t use a puzzle CAPTCHA. It works without JavaScript, and if sending
-      it fails you can email us instead.
+      Our contact form doesn’t use a puzzle CAPTCHA, and if sending it fails you can email us
+      instead.
     </li>
   </ul>
 
   <h2>Known gaps</h2>
   <ul>
     <li>
-      We check the site by hand, with a keyboard and a screen reader. It has not yet had an
-      independent accessibility audit.
+      We check the site by hand: the keyboard path through every page and the contrast of our
+      colour pairs. It has not yet had a screen-reader review or an independent accessibility
+      audit.
     </li>
     <li>
       The contact form uses Cloudflare Turnstile, a third-party service, to stop spam. It
@@ -56,7 +58,7 @@ import { CONTACT_EMAIL, LEGAL_NAME, MAILING_ADDRESS } from "../site";
     If something on the site doesn’t work for you, please tell us. Email
     <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> with the page address and a short
     description of the problem, or write to us at {LEGAL_NAME}, {MAILING_ADDRESS.join(", ")}.
-    We aim to reply within two business days. We’ll also get you the information you need
+    We aim to reply within one business day. We’ll also get you the information you need
     another way while we fix the problem.
   </p>
 

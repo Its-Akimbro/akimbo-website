@@ -24,13 +24,6 @@ export const AUDIT_CTA = { label: "Book a network audit", href: "/contact/" };
  */
 export const NAV: { label: string; href: string }[] = [];
 
-/**
- * The effective date shown on the legal pages (ISO date). The pages are
- * drafts until the NC attorney review in the launch ticket (#43); update this
- * when the reviewed versions are published.
- */
-export const LEGAL_EFFECTIVE_DATE = "2026-11-24";
-
 export const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy/" },
   { label: "Website Terms", href: "/terms/" },
