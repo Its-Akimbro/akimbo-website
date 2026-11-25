@@ -22,7 +22,7 @@ export const AUDIT_CTA = { label: "Book a network audit", href: "/contact/" };
  * Header navigation. Each page's ticket adds its entry when the page lands,
  * so the nav never links to a page that doesn't exist.
  */
-export const NAV: { label: string; href: string }[] = [];
+export const NAV: { label: string; href: string }[] = [{ label: "Plans", href: "/plans/" }];
 
 export const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy/" },

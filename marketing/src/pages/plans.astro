@@ -1,0 +1,291 @@
+---
+// Plans and pricing. Every number here comes from the pricing module, so a
+// price change never touches this page (spec #28, ticket #14).
+import AuditCta from "../components/AuditCta.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import {
+  AUDIT,
+  CONTRACT,
+  CURRENCY,
+  EXIT_HANDOVER,
+  formatUsd,
+  HOURLY,
+  PLAN_BASIS,
+  planQuote,
+  pricesAsOfLabel,
+  ROUTINE_CHANGE_HOURS,
+  SERVER_ADDONS,
+  SUPPORT_HOURS,
+  tier,
+  TIERS,
+  TRAVEL,
+  WORKED_EXAMPLE,
+} from "../pricing";
+
+const serverTier = TIERS.find((t) => t.coversServers)!;
+const example = WORKED_EXAMPLE.plan;
+const exampleTier = tier(example.tier);
+const exampleQuote = planQuote(example);
+const supportHours = `${SUPPORT_HOURS.days}, ${SUPPORT_HOURS.open}–${SUPPORT_HOURS.close} ${SUPPORT_HOURS.timeZone}`;
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+const compareRows: { label: string; value: (t: (typeof TIERS)[number]) => string }[] = [
+  { label: "Includes", value: (t) => t.includes },
+  { label: "Servers and virtualisation", value: (t) => t.servers },
+  { label: "Response target: critical", value: (t) => t.response.critical },
+  { label: "Response target: high", value: (t) => t.response.high },
+  { label: "Response target: normal", value: (t) => t.response.normal },
+  { label: "Out of hours", value: (t) => t.outOfHours },
+  { label: "On site", value: (t) => t.onSite },
+];
+
+const section = "mx-auto max-w-6xl px-4 py-10 sm:px-6";
+---
+
+<BaseLayout
+  title="Plans and pricing"
+  description={`Managed network and server Plans for small businesses, from ${formatUsd(TIERS[0].fromPerSite)} a month per site. Month-to-month, no exit fee, prices published.`}
+>
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <h1>Plans and pricing</h1>
+      <p class="mt-4 max-w-3xl text-lg">
+        Three tiers, priced per site. You get a fixed monthly price in writing after your Network
+        Audit. Month-to-month, with no exit fee.
+      </p>
+      <p class="mt-4 text-sm">
+        Prices in {CURRENCY}, excluding any applicable sales tax. Prices as of {pricesAsOfLabel()}.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="tiers" class={section}>
+    <h2 id="tiers">The three tiers</h2>
+    <p class="mt-2 max-w-3xl text-muted">
+      One tier covers all of a client's sites. Networking, servers and virtualisation only: no
+      desktops, no help desk.
+    </p>
+    <ul class="mt-6 grid gap-6 md:grid-cols-3">
+      {
+        TIERS.map((t) => (
+          <li class="flex flex-col rounded-lg border border-slate-200 bg-slate-50 p-6">
+            <h3>{t.name}</h3>
+            <p class="mt-3">
+              <span class="text-sm text-muted">From </span>
+              <span class="font-heading text-h2 font-bold">{formatUsd(t.fromPerSite)}</span>
+              <span class="text-sm text-muted"> a month per site</span>
+            </p>
+            <p class="mt-4 text-sm">{t.includes}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section aria-labelledby="basis" class={section}>
+    <h2 id="basis">How the price is worked out</h2>
+    <ul class="mt-4 max-w-3xl list-disc space-y-2 pl-5">
+      <li>
+        Each tier's price covers one site with up to {PLAN_BASIS.devicesIncludedPerSite} network devices
+        (firewalls, routers, switches and access points).
+      </li>
+      <li>+{formatUsd(PLAN_BASIS.perExtraDevice)} a month for each further network device at a site.</li>
+      <li>
+        +{formatUsd(PLAN_BASIS.perExtraSite)} a month for each extra site, which gets its own allowance
+        of {PLAN_BASIS.devicesIncludedPerSite} network devices.
+      </li>
+      <li>All of a client's sites are on the same tier.</li>
+    </ul>
+
+    <h3 class="mt-8">Server and VM add-ons</h3>
+    <p class="mt-2 max-w-3xl">Servers and virtualisation are covered on {serverTier.name} only.</p>
+    <ul class="mt-4 max-w-3xl list-disc space-y-2 pl-5">
+      <li>{count(SERVER_ADDONS.serversIncluded, "physical server or hypervisor host", "physical servers or hypervisor hosts")} included.</li>
+      <li>+{formatUsd(SERVER_ADDONS.perExtraServer)} a month for each further server or host.</li>
+      <li>+{formatUsd(SERVER_ADDONS.perVm)} a month for each managed virtual machine.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="worked-example" class={section}>
+    <h2 id="worked-example">Worked example</h2>
+    <p class="mt-2 max-w-3xl">
+      A {WORKED_EXAMPLE.headcount}-person office on {exampleTier.name}, with {count(
+        example.siteDevices.reduce((sum, n) => sum + n, 0),
+        "network device",
+        "network devices",
+      )} at {count(example.siteDevices.length, "site", "sites")}, {count(
+        example.servers,
+        "virtualised host",
+        "virtualised hosts",
+      )} and {count(example.vms, "virtual machine", "virtual machines")}:
+      about {formatUsd(exampleQuote.total)} a month.
+    </p>
+    <div class="mt-6 max-w-2xl overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">Monthly price for the worked example, line by line</caption>
+        <thead>
+          <tr class="border-b border-slate-200">
+            <th scope="col" class="py-2 pr-4 font-semibold">Item</th>
+            <th scope="col" class="py-2 text-right font-semibold">Per month</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            exampleQuote.lines.map((line) => (
+              <tr class="border-b border-slate-200">
+                <td class="py-2 pr-4">{line.label}</td>
+                <td class="py-2 text-right tabular-nums">{formatUsd(line.amount)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row" class="py-2 pr-4 font-semibold">Total</th>
+            <td class="py-2 text-right font-semibold tabular-nums">{formatUsd(exampleQuote.total)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="compare" class={section}>
+    <h2 id="compare">What each tier includes</h2>
+    <div class="mt-6 overflow-x-auto">
+      <table class="w-full min-w-[48rem] border-collapse text-left align-top text-sm">
+        <caption class="sr-only">Comparison of the three tiers</caption>
+        <thead>
+          <tr class="border-b-2 border-slate-200">
+            <td class="py-3 pr-4"></td>
+            {TIERS.map((t) => <th scope="col" class="py-3 pr-4 font-heading text-base font-semibold">{t.name}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-slate-200">
+            <th scope="row" class="py-3 pr-4 align-top font-semibold">From (per site)</th>
+            {TIERS.map((t) => <td class="py-3 pr-4 align-top">{formatUsd(t.fromPerSite)} a month</td>)}
+          </tr>
+          {
+            compareRows.map((row) => (
+              <tr class="border-b border-slate-200">
+                <th scope="row" class="py-3 pr-4 align-top font-semibold">{row.label}</th>
+                {TIERS.map((t) => <td class="py-3 pr-4 align-top">{row.value(t)}</td>)}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-4 max-w-3xl text-sm text-muted">
+      Response times are targets, not guarantees. They are measured from when the engineer starts
+      working on the issue.
+    </p>
+  </section>
+
+  <section aria-labelledby="definitions" class={section}>
+    <h2 id="definitions">What the terms mean</h2>
+    <dl class="mt-4 grid max-w-3xl gap-4">
+      <div>
+        <dt class="font-semibold">Business hours</dt>
+        <dd>{supportHours}, excluding public holidays.</dd>
+      </div>
+      <div>
+        <dt class="font-semibold">Critical</dt>
+        <dd>A site or core system is down.</dd>
+      </div>
+      <div>
+        <dt class="font-semibold">High</dt>
+        <dd>Something is degraded, or a workaround exists.</dd>
+      </div>
+      <div>
+        <dt class="font-semibold">Normal</dt>
+        <dd>Requests and changes.</dd>
+      </div>
+      <div>
+        <dt class="font-semibold">Routine change</dt>
+        <dd>
+          A change that takes under about {count(ROUTINE_CHANGE_HOURS, "hour", "hours")}, such as a new
+          VLAN, a firewall rule, adding an access point or a VPN user. Anything bigger, or new to your
+          environment, is quoted as a project.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="scope" class={section}>
+    <h2 id="scope">What's covered and what isn't</h2>
+    <p class="mt-4 max-w-3xl">
+      Akimbo covers networking, servers and virtualisation only. We don't support desktops or
+      laptops, and we don't run a help desk.
+    </p>
+    <p class="mt-2 max-w-3xl">
+      Hardware, licences and vendor subscriptions, and backup software and storage, aren't included
+      in any Plan. They're quoted separately.
+    </p>
+  </section>
+
+  <section aria-labelledby="terms" class={section}>
+    <h2 id="terms">Contract terms</h2>
+    <p class="mt-2 text-muted">The same on every tier.</p>
+    <ul class="mt-4 max-w-3xl list-disc space-y-2 pl-5">
+      <li>Month-to-month, billed monthly in advance.</li>
+      <li>Cancel with {CONTRACT.cancellationNoticeDays} days' notice. No exit fee.</li>
+      <li>No automatic renewal into a fixed term, and no minimum device count.</li>
+      <li>
+        Price changes come with {CONTRACT.priceChangeNoticeDays} days' notice, and you can leave before
+        they apply.
+      </li>
+    </ul>
+
+    <h3 class="mt-8">Free exit handover</h3>
+    <p class="mt-2 max-w-3xl">
+      If you leave, we hand over your documentation, configs and admin credentials within {EXIT_HANDOVER.withinBusinessDays}
+      business days at no charge. We also spend up to {count(EXIT_HANDOVER.hoursWithNextProvider, "hour", "hours")} with
+      your next provider.
+    </p>
+  </section>
+
+  <section aria-labelledby="hourly" class={section}>
+    <h2 id="hourly">Hourly rates</h2>
+    <p class="mt-2 max-w-3xl">For work outside a Plan, and for anyone not on one.</p>
+    <ul class="mt-4 max-w-3xl list-disc space-y-2 pl-5">
+      <li>{formatUsd(HOURLY.standard)} an hour, or {formatUsd(HOURLY.onPlan)} an hour for clients on a Plan.</li>
+      <li>
+        Billed in {HOURLY.incrementMinutes}-minute increments, with a {count(HOURLY.onSiteMinimumHours, "hour", "hours")}
+        minimum on site.
+      </li>
+      <li>
+        Out of hours is {HOURLY.outOfHoursMultiplier}× the rate and public holidays {HOURLY.holidayMultiplier}×,
+        each with a {count(HOURLY.multiplierMinimumHours, "hour", "hours")} minimum.
+      </li>
+      <li>No block-hour packs. Projects are fixed-price bids based on your audit findings.</li>
+    </ul>
+
+    <h3 class="mt-8">Travel</h3>
+    <ul class="mt-4 max-w-3xl list-disc space-y-2 pl-5">
+      <li>No trip charge within about {TRAVEL.freeRadiusMiles} miles of our base. Mileage is charged beyond that.</li>
+      <li>Scheduled visits cancelled with less than {TRAVEL.cancellationNoticeHours} hours' notice are charged.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="support-hours" class={section}>
+    <h2 id="support-hours">Support hours</h2>
+    <p class="mt-4 max-w-3xl">
+      {supportHours}. Monitoring runs around the clock, and alerts are answered during support hours.
+      Out of hours we respond on a best-effort basis on Managed and above. We don't promise a 24/7
+      response.
+    </p>
+  </section>
+
+  <section aria-labelledby="start" class="bg-slate-50">
+    <div class={section}>
+      <h2 id="start">Every plan starts with an audit</h2>
+      <p class="mt-4 max-w-3xl">
+        The Network Audit is {formatUsd(AUDIT.price)}, fixed, for one site with up to {AUDIT.maxDevices}
+        infrastructure devices. The report is yours to keep. If you sign a Plan or a project from it
+        within {AUDIT.creditWindowDays} days, the full fee is credited.
+      </p>
+      <AuditCta class="mt-6" />
+    </div>
+  </section>
+</BaseLayout>
