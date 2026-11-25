@@ -65,6 +65,18 @@ export function pages(): Page[] {
     }));
 }
 
+/** The built page at a site path ("/privacy/"); throws if there is none. */
+export function pageAt(path: string): Page {
+  const page = pages().find((candidate) => candidate.path === path);
+  if (!page) throw new Error(`No built page at ${path}`);
+  return page;
+}
+
+/** The text a visitor reads in the page's main content, whitespace collapsed. */
+export function mainText(page: Page): string {
+  return (page.html.querySelector("main")?.textContent ?? "").replace(/\s+/g, " ").trim();
+}
+
 /** Whether a URL is served by this site (including `www`). */
 export function isSameSite(url: URL): boolean {
   return SITE_ORIGINS.has(url.origin);

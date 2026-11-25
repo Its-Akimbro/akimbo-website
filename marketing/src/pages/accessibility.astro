@@ -1,11 +1,68 @@
 ---
-// Stub until the legal pages land (#37).
-import BaseLayout from "../layouts/BaseLayout.astro";
+import LegalLayout from "../layouts/LegalLayout.astro";
+import { CONTACT_EMAIL, LEGAL_NAME, MAILING_ADDRESS } from "../site";
 ---
 
-<BaseLayout title="Accessibility statement" description="Akimbo Technology's accessibility statement and how to report a barrier.">
-  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-    <h1>Accessibility statement</h1>
-    <p class="mt-4 text-muted">This page is being written.</p>
-  </div>
-</BaseLayout>
+<LegalLayout
+  title="Accessibility statement"
+  description="Akimbo Technology's accessibility statement and how to report a barrier."
+>
+  <p>
+    {LEGAL_NAME} wants everyone to be able to use this website, including people who use a
+    screen reader, a keyboard instead of a mouse, magnification, or other assistive technology.
+  </p>
+
+  <h2>Our target</h2>
+  <p>
+    We aim for the site to meet the
+    <a href="https://www.w3.org/TR/WCAG22/">Web Content Accessibility Guidelines (WCAG) 2.2</a>
+    at level AA. We plan to hold the Client Portal at <code>portal.akimbo.technology</code> to the
+    same standard.
+  </p>
+
+  <h2>What we do</h2>
+  <ul>
+    <li>Pages are built with standard HTML headings, landmarks, lists and form labels.</li>
+    <li>
+      Every page can be used with a keyboard alone, and a “Skip to content” link is the first
+      thing a keyboard user reaches.
+    </li>
+    <li>We check the contrast of our text and background colour pairs against WCAG AA.</li>
+    <li>
+      Our contact form doesn’t use a puzzle CAPTCHA. It works without JavaScript, and if sending
+      it fails you can email us instead.
+    </li>
+  </ul>
+
+  <h2>Known gaps</h2>
+  <ul>
+    <li>
+      We check the site by hand, with a keyboard and a screen reader. It has not yet had an
+      independent accessibility audit.
+    </li>
+    <li>
+      The contact form uses Cloudflare Turnstile, a third-party service, to stop spam. It
+      normally runs without any action from you. If it ever asks you to do something you can’t,
+      email us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> instead.
+    </li>
+    <li>
+      Documents we send you, such as network audit reports, may not yet be fully accessible. Ask
+      us and we will provide them in a format that works for you.
+    </li>
+  </ul>
+
+  <h2>Report a barrier</h2>
+  <p>
+    If something on the site doesn’t work for you, please tell us. Email
+    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> with the page address and a short
+    description of the problem, or write to us at {LEGAL_NAME}, {MAILING_ADDRESS.join(", ")}.
+    We aim to reply within two business days. We’ll also get you the information you need
+    another way while we fix the problem.
+  </p>
+
+  <h2>About this statement</h2>
+  <p>
+    We last reviewed this statement on its effective date, shown at the top of this page. We
+    review it again whenever the site changes significantly.
+  </p>
+</LegalLayout>

@@ -8,12 +8,16 @@ import {
   isSitePath,
   links,
   loadedUrls,
+  mainText,
+  pageAt,
   PORTAL_ORIGIN,
   pages,
   servedFile,
   sitemapUrls,
   SITE_ORIGIN,
 } from "./dist";
+
+const LEGAL_PATHS = ["/privacy/", "/terms/", "/accessibility/"];
 
 describe("built site", () => {
   it("is static files with no server entry point", () => {
@@ -26,6 +30,62 @@ describe("built site", () => {
 
   it("lists the home page in the sitemap", () => {
     expect(sitemapUrls()).toContain(`${SITE_ORIGIN}/`);
+  });
+
+  it("lists every legal page in the sitemap", () => {
+    const missing = LEGAL_PATHS.filter((path) => !sitemapUrls().includes(`${SITE_ORIGIN}${path}`));
+
+    expect(missing).toEqual([]);
+  });
+
+  it("shows an effective date on every legal page", () => {
+    const missing = LEGAL_PATHS.filter((path) => {
+      const time = pageAt(path).html.querySelector("main time[datetime]");
+      const datetime = time?.getAttribute("datetime") ?? "";
+      const label = time?.parentNode?.textContent ?? "";
+      return !/^\d{4}-\d{2}-\d{2}$/.test(datetime) || !/effective/i.test(label);
+    });
+
+    expect(missing).toEqual([]);
+  });
+
+  it("marks every legal page as a draft pending attorney review", () => {
+    const missing = LEGAL_PATHS.filter(
+      (path) => !/draft[^.]*attorney review/i.test(mainText(pageAt(path))),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("has a Privacy Policy that covers what the ticket and spec require", () => {
+    const privacy = pageAt("/privacy/");
+    const text = mainText(privacy);
+    // Each item must appear in the policy (#37, spec #28).
+    const required: [string, RegExp][] = [
+      ["names Cloudflare", /Cloudflare/],
+      ["names Turnstile", /Turnstile/],
+      ["names Postmark", /Postmark/],
+      ["says Postmark open and click tracking is off", /open and click tracking[^.]*\boff\b/i],
+      ["names Microsoft 365", /Microsoft 365/],
+      ["says the contact form stores nothing", /stores nothing/i],
+      ["says no auto-reply is sent", /no (automatic reply|auto-reply)/i],
+      ["says personal information is not sold", /do not sell/i],
+      ["gives the audit retention", /90 days after/i],
+      ["gives the offboarding retention", /30 days after/i],
+      ["gives the backup retention", /within 12 months/i],
+      ["covers cookies", /strictly necessary/i],
+      ["covers Do Not Track", /Do Not Track/],
+      ["covers children", /children/i],
+    ];
+    const missing = required.filter(([, pattern]) => !pattern.test(text)).map(([what]) => what);
+
+    // No state or EU rights sections that would promise processes Akimbo doesn't run.
+    const rightsHeadings = privacy.html
+      .querySelectorAll("main h2, main h3")
+      .map((heading) => heading.textContent)
+      .filter((heading) => /CCPA|CPRA|GDPR|California|European/i.test(heading));
+
+    expect({ missing, rightsHeadings }).toEqual({ missing: [], rightsHeadings: [] });
   });
 
   it("has a page for every sitemap URL", () => {
