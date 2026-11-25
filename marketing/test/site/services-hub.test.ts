@@ -20,7 +20,7 @@ describe("/services hub", () => {
     );
 
     expect(linked).toEqual([
-      [{ text: "Network audit", to: "/contact/?service=network-audit" }],
+      [{ text: "Network audit", to: "/services/network-audit/" }],
       [{ text: "Managed networking", to: "/services/managed-networking/" }],
       [{ text: "Servers and virtualisation", to: "/services/servers-virtualisation/" }],
       [{ text: "Network projects", to: "/services/network-projects/" }],

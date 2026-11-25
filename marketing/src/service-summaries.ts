@@ -2,7 +2,7 @@
 // the order they're shown: the Network Audit first, as the entry offer.
 // Every price comes from the pricing module (#32).
 import { AUDIT, formatUsd, SERVER_TIER, tier } from "./pricing";
-import { contactHref, SERVICES, type ServiceSlug } from "./services";
+import { SERVICES, type ServiceSlug } from "./services";
 
 export interface ServiceSummary {
   slug: ServiceSlug;
@@ -37,9 +37,8 @@ export const SERVICE_SUMMARIES: readonly ServiceSummary[] = [
   {
     slug: "network-audit",
     name: SERVICES["network-audit"].name,
-    // Books the audit until the Network Audit page lands (#34), which
-    // points this at /services/network-audit/.
-    href: contactHref("network-audit"),
+    // The Network Audit has its own page, not the shared template (#34).
+    href: "/services/network-audit/",
     startHere: true,
     tagline: "Your network devices documented and a plain-English risk report, yours to keep.",
     fit: "you don't know what you have, or you're not sure where to start.",
