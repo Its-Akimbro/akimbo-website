@@ -1,4 +1,5 @@
 import { AUDIT, HOURLY, PLAN_BASIS, SERVER_ADDONS, TIERS } from "../../src/pricing";
+import { dollarAmounts } from "./dist";
 
 /** Every single price the pricing module publishes (not computed totals). */
 export const MODULE_PRICES: ReadonlySet<number> = new Set([
@@ -12,3 +13,8 @@ export const MODULE_PRICES: ReadonlySet<number> = new Set([
   HOURLY.standard,
   HOURLY.onPlan,
 ]);
+
+/** Dollar amounts in some text that aren't among the module's prices. */
+export function unpublishedAmounts(content: string): number[] {
+  return dollarAmounts(content).filter((amount) => !MODULE_PRICES.has(amount));
+}

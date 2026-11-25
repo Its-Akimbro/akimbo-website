@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AUDIT, SERVER_TIER, tier } from "../../src/pricing";
-import { dollarAmounts, links, page, region, sitemapUrls, SITE_ORIGIN, text } from "./dist";
-import { MODULE_PRICES } from "./prices";
+import { dollarAmounts, links, page, region, sitemapUrls, SITE_ORIGIN, sitePath, text } from "./dist";
+import { unpublishedAmounts } from "./prices";
 
 const hub = () => page("/services/");
 const rows = () => region(hub(), "All services").querySelectorAll("li");
@@ -15,7 +15,7 @@ describe("/services hub", () => {
     const linked = rows().map((row) =>
       links({ path: "/services/", html: row }).map((link) => ({
         text: link.text,
-        to: `${link.url.pathname}${link.url.search}`,
+        to: sitePath(link.url),
       })),
     );
 
@@ -55,8 +55,6 @@ describe("/services hub", () => {
   });
 
   it("shows no dollar amount the pricing module doesn't publish", () => {
-    const unknown = dollarAmounts(text(hub().html)).filter((amount) => !MODULE_PRICES.has(amount));
-
-    expect(unknown).toEqual([]);
+    expect(unpublishedAmounts(text(hub().html))).toEqual([]);
   });
 });

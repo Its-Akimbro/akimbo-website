@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { CITY_REGION, FOUNDER_NAME, FOUNDER_PHOTO } from "../../src/placeholders";
 import { AUDIT } from "../../src/pricing";
-import { dollarAmounts, isSitePath, links, page, region, text } from "./dist";
-import { MODULE_PRICES } from "./prices";
+import { dollarAmounts, isSitePath, links, page, region, sitePath, text } from "./dist";
+import { unpublishedAmounts } from "./prices";
 
 const home = () => page("/");
 
@@ -21,13 +22,14 @@ describe("home page", () => {
     const h1 = home().html.querySelectorAll("h1");
 
     expect(h1).toHaveLength(1);
-    expect(text(h1[0])).toMatch(/networks and servers for small businesses in \[TBD: City\/Region\]/i);
+    expect(text(h1[0])).toMatch(/networks and servers for small businesses in/i);
+    expect(text(h1[0])).toContain(CITY_REGION);
   });
 
   it("shows a tile per service, the Network Audit first, each linking on", () => {
     const tiles = region(home(), "Services").querySelectorAll("li");
     const tileLink = (tile: (typeof tiles)[number]) =>
-      links({ path: "/", html: tile }).map((link) => `${link.url.pathname}${link.url.search}`);
+      links({ path: "/", html: tile }).map((link) => sitePath(link.url));
 
     expect(tiles.map((tile) => text(tile.querySelector("h3")!))).toEqual([
       "Network audit",
@@ -68,16 +70,16 @@ describe("home page", () => {
 
   it("has a founder trust strip with the founder's name and photo, linking to About", () => {
     const strip = region(home(), "Who you'll work with");
-    const photo = strip.querySelector('[role="img"]');
+    const photos = strip
+      .querySelectorAll("[alt], [aria-label]")
+      .filter((el) => (el.getAttribute("alt") ?? el.getAttribute("aria-label")) === FOUNDER_PHOTO);
 
-    expect(text(strip)).toContain("[TBD: Founder name]");
-    expect(photo?.getAttribute("aria-label")).toBe("[TBD: Founder photo]");
+    expect(text(strip)).toContain(FOUNDER_NAME);
+    expect(photos).toHaveLength(1);
     expect(links({ path: "/", html: strip }).some((link) => isSitePath(link.url, "/about"))).toBe(true);
   });
 
   it("shows no dollar amount the pricing module doesn't publish", () => {
-    const unknown = dollarAmounts(text(home().html)).filter((amount) => !MODULE_PRICES.has(amount));
-
-    expect(unknown).toEqual([]);
+    expect(unpublishedAmounts(text(home().html))).toEqual([]);
   });
 });

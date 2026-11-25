@@ -21,15 +21,15 @@ import { SERVICE_SUMMARIES } from "../../service-summaries";
     <h2 id="all-services" class="sr-only">All services</h2>
     <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200">
       {
-        SERVICE_SUMMARIES.map((service, i) => (
+        SERVICE_SUMMARIES.map((service) => (
           <li
             class:list={[
               "grid gap-4 p-6 md:grid-cols-[1fr_1.5fr_1fr] md:gap-8",
-              i === 0 && "bg-slate-50",
+              service.startHere && "bg-slate-50",
             ]}
           >
             <div>
-              {i === 0 && (
+              {service.startHere && (
                 <p class="mb-1 text-sm font-semibold tracking-wide text-muted uppercase">Start here</p>
               )}
               <h3>
@@ -57,10 +57,10 @@ import { SERVICE_SUMMARIES } from "../../service-summaries";
 
   <section class="border-t border-slate-200 bg-slate-50">
     <div class="mx-auto flex max-w-6xl flex-col items-start gap-4 px-4 py-12 sm:px-6">
-      <h2>Not sure where to start?</h2>
+      <h2>Every plan starts with an audit</h2>
       <p class="max-w-2xl">
-        Most clients begin with a fixed-price network audit. You get your network documented and a plain-English report
-        that's yours to keep, whether or not you hire us.
+        A fixed-price network audit gets your network documented and gives you a plain-English report that's yours to
+        keep, whether or not you hire us.
       </p>
       <AuditCta />
     </div>
