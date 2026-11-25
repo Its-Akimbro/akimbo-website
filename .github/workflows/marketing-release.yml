@@ -54,8 +54,10 @@ jobs:
             echo "::error::Tag '$TAG' points at $GITHUB_SHA, which is not on main. Tag a commit on main."
             exit 1
           fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tarball=marketing-$version-dist.tar.gz" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=$version"
+            echo "tarball=marketing-$version-dist.tar.gz"
+          } >> "$GITHUB_OUTPUT"
 
   ci:
     name: CI
@@ -165,8 +167,10 @@ jobs:
             echo "::error::wrangler reported no preview URL. Enable Preview URLs on the Worker and the account's workers.dev subdomain."
             exit 1
           fi
-          echo "version_id=$version_id" >> "$GITHUB_OUTPUT"
-          echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
+          {
+            echo "version_id=$version_id"
+            echo "preview_url=$preview_url"
+          } >> "$GITHUB_OUTPUT"
           {
             echo "### $TAG uploaded, not live yet"
             echo

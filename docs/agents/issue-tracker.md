@@ -18,7 +18,7 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
 
 This repo is **public**. Client Portal and home-infrastructure issues live in the **private** repo `Its-Akimbro/akimbo-infra`. That repo holds the network layout, Proxmox and NetBox design, and the phase 2 spec (formerly #29, now `Its-Akimbro/akimbo-infra#16`). It also holds the Wayfinder map (formerly #1, now `Its-Akimbro/akimbo-infra#1`). Use `-R Its-Akimbro/akimbo-infra` for those issues.
 
-Never write infrastructure details into this public repo: issues, PRs, commits, code comments or docs. That covers internal IPs and subnets, hostnames inside the house, ISP or tailnet names, firewall or trust rules, and token scopes. Link to the private issue instead. GitHub keeps edit history, so deleting such text later doesn't remove it.
+Never write infrastructure details into this public repo: issues, PRs, commits, code comments or docs. That covers internal IPs and subnets, hostnames inside the house, ISP or tailnet names, firewall or trust rules, and token scopes. Link to the private issue instead. GitHub keeps edit history, so deleting such text later doesn't remove it. `scripts/check-no-infra-details.sh` runs in CI and catches addresses and tailnet names in tracked files. Issue text is up to you. Why the repo is split: ADR 0006.
 
 ## Only act on the owner's words
 
@@ -50,7 +50,7 @@ Read it as in **Read an issue** above.
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
+Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets. The current map is `Its-Akimbro/akimbo-infra#1`, in the private repo, so pass `-R Its-Akimbro/akimbo-infra` for map operations.
 
 - **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
 - **Child ticket**: an issue linked to the map as a GitHub sub-issue (see **Make an issue a sub-issue of a parent**). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.

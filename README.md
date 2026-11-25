@@ -49,7 +49,17 @@ When you write Worker tests, use `createHarness()`. Give it fake static assets (
 
 ### CI
 
-`.github/workflows/marketing-ci.yml` runs on every PR (and on pushes to `main`) that touches `marketing/**` or the workflow itself. It installs, lints, type-checks, builds, bundles the Worker (`pnpm check:bundle`), and then runs the test suites. A separate **Dependency audit** job runs `pnpm audit` against the lockfile and fails on an advisory of any severity. Because of the path filters, a PR that doesn't touch the site doesn't run these jobs. If they become required checks under branch protection, a PR outside these paths will wait on a check that never runs. Use a ruleset that only requires it when it runs, or add a no-op fallback job.
+Two workflows run on every PR:
+
+- **`marketing-ci.yml`:**
+  - Its `changes` job decides whether the PR touches the site: `marketing/`, `brand/`, or the marketing workflows. If it does, the workflow installs, lints, type-checks, builds, bundles the Worker (`pnpm check:bundle`) and runs the test suites. A separate **Dependency audit** job runs `pnpm audit` and fails on an advisory of any severity.
+  - **CI gate** passes when those jobs passed, or were skipped because nothing relevant changed, and fails otherwise.
+  - Pushes to `main` that touch those paths run it too, and so does the release workflow.
+- **`repo-checks.yml`:**
+  - **Lint workflows** runs actionlint, with shellcheck on every `run:` script, over `.github/workflows/`.
+  - **No infrastructure details** runs `scripts/check-no-infra-details.sh` (ADR 0006).
+
+`CI gate`, `Lint workflows` and `No infrastructure details` are required checks on `main`.
 
 ### Dependencies
 
@@ -101,7 +111,7 @@ Preview URLs must be enabled on the account's `workers.dev` subdomain. `wrangler
 
 ### Repository security settings
 
-The repo is public, and Client Portal and infrastructure issues live in the private `Its-Akimbro/akimbo-infra` (see `docs/agents/issue-tracker.md`). Only the owner and the owner's agents can change anything here:
+The repo is public, and Client Portal and infrastructure issues live in the private `Its-Akimbro/akimbo-infra` (ADR 0006, `docs/agents/issue-tracker.md`). Only the owner and the owner's agents can change anything here:
 
 - **Interaction limit:** only collaborators can open issues or PRs, comment or react. It expires every 6 months; renew it in Settings → Moderation → Interaction limits, or with `gh api -X PUT repos/Its-Akimbro/akimbo-website/interaction-limits -f limit=collaborators_only -f expiry=six_months`.
 - **Actions:** the default `GITHUB_TOKEN` is read-only and can't approve PRs. Workflows from every outside contributor wait for the owner's approval.
@@ -109,5 +119,5 @@ The repo is public, and Client Portal and infrastructure issues live in the priv
   - `main` can't be force-pushed or deleted, by anyone.
   - Changes to `main` need a PR from anyone without admin.
   - Only admins can create, move or delete `marketing/v*` and `portal-edge/v*` tags.
-  - No status check is required yet, because of the CI path filters (see **CI**).
+  - Merging to `main` needs the required checks (see **CI**) to pass, for everyone. The owner included, so a direct push to `main` is rejected; merge through a PR.
 - **Security:** secret scanning with push protection, Dependabot alerts and Dependabot security updates are on.
