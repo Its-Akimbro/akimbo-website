@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AUDIT } from "../../src/pricing";
+import { AUDIT, CURRENCY, formatUsd, pricesAsOfLabel } from "../../src/pricing";
 import {
   dollarAmounts,
   isSitePath,
@@ -15,10 +15,9 @@ import {
 const PATH = "/services/network-audit/";
 const audit = () => page(PATH);
 
-/** A regex fragment matching a count written as digits or, for small numbers, a word. */
-function num(n: number): string {
-  const word = ["zero", "one", "two", "three", "four", "five"][n];
-  return word ? `(?:${n}|${word})` : String(n);
+/** A regex fragment matching a count as digits, or 1 as "one". */
+function countPattern(n: number): string {
+  return n === 1 ? "(?:1|one)" : String(n);
 }
 
 describe("/services/network-audit", () => {
@@ -33,17 +32,17 @@ describe("/services/network-audit", () => {
   it("states the scope: one site, the device limit, endpoints, time on site, no remediation", () => {
     const scope = text(region(audit(), "Price and scope"));
 
-    expect(scope).toMatch(new RegExp(`\\b${num(AUDIT.sites)} sites?\\b`, "i"));
-    expect(scope).toMatch(new RegExp(`up to ${num(AUDIT.maxDevices)} infrastructure devices`, "i"));
+    expect(scope).toMatch(new RegExp(`\\b${countPattern(AUDIT.sites)} sites?\\b`, "i"));
+    expect(scope).toMatch(new RegExp(`up to ${countPattern(AUDIT.maxDevices)} infrastructure devices`, "i"));
     expect(scope).toMatch(/endpoints[^.]*scanned[^.]*not counted/i);
-    expect(scope).toMatch(new RegExp(`up to ${num(AUDIT.daysOnSite)} days? on site`, "i"));
+    expect(scope).toMatch(new RegExp(`up to ${countPattern(AUDIT.daysOnSite)} days? on site`, "i"));
     expect(scope).toMatch(/remediation[^.]*(isn't|is not|not) included|excludes? remediation/i);
   });
 
   it("prices extra sites and each further block of devices from the add-on price", () => {
     const scope = text(region(audit(), "Price and scope"));
 
-    expect(scope).toContain(`from +$${AUDIT.addOnFrom}`);
+    expect(scope).toContain(`from +${formatUsd(AUDIT.addOnFrom)}`);
     expect(scope).toMatch(/extra sites?/i);
     expect(scope).toMatch(new RegExp(`further ${AUDIT.addOnDeviceBlock} devices`, "i"));
   });
@@ -58,7 +57,7 @@ describe("/services/network-audit", () => {
     expect(deliverables).toMatch(new RegExp(`${min}–${max}[- ]minute walkthrough`, "i"));
   });
 
-  it("says plainly the report is the client's to keep, whether or not they hire Akimbo", () => {
+  it("says plainly the report is the Audit Client's to keep, whether or not they hire Akimbo", () => {
     expect(text(audit().html)).toMatch(/report is yours to keep, whether or not you hire us/i);
   });
 
@@ -75,7 +74,7 @@ describe("/services/network-audit", () => {
     const after = text(region(audit(), "After the audit"));
 
     expect(after).toMatch(/inventory comes with (your|the) report/i);
-    expect(after).toMatch(/live in the Client Portal when you join a Plan/i);
+    expect(after).toMatch(/live in the Client Portal[^.]*join a Plan/i);
   });
 
   it("shows no dollar amount the pricing module doesn't publish for the audit", () => {
@@ -89,6 +88,14 @@ describe("/services/network-audit", () => {
     const description = audit().html.querySelector('meta[name="description"]')?.getAttribute("content");
 
     expect(dollarAmounts(description ?? "")).toContain(AUDIT.price);
+  });
+
+  it("says prices are in USD, exclude sales tax, and when they were set", () => {
+    const content = text(audit().html);
+
+    expect(content).toContain(CURRENCY);
+    expect(content).toMatch(/excluding (any applicable )?sales tax/i);
+    expect(content).toContain(`Prices as of ${pricesAsOfLabel()}`);
   });
 
   it("never runs a number into the next word", () => {
