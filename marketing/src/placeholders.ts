@@ -3,11 +3,7 @@
 // finds them all before launch. The smoke test fails on any other
 // bracketed text, so a placeholder can't slip in marked some other way.
 
-/**
- * The service-area map: a self-hosted image, never a third-party map embed.
- * Swap the file for the owner's map before launch.
- */
-export { default as SERVICE_AREA_MAP } from "./assets/service-area-map-placeholder.svg";
+// Placeholder images are in `placeholder-assets.ts`; see the note there.
 
 /** Marks content the owner still has to supply. */
 export function placeholder(what: string): string {

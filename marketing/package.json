@@ -15,7 +15,8 @@
     "test": "pnpm test:unit && pnpm test:worker && pnpm test:site",
     "test:unit": "vitest run --project unit",
     "test:worker": "vitest run --project worker",
-    "test:site": "vitest run --project site"
+    "test:site": "vitest run --project site",
+    "check:bundle": "wrangler deploy --dry-run --outdir .wrangler/dry-run"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.6",

@@ -10,6 +10,14 @@ on:
     paths:
       - "marketing/**"
       - ".github/workflows/marketing-ci.yml"
+  # The release workflow reruns CI on the tagged commit and deploys the `dist/`
+  # this run built and tested, so the bytes that ship are the bytes that passed.
+  workflow_call:
+    inputs:
+      upload-dist:
+        description: Upload the tested `dist/` as the `marketing-dist` artifact.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -47,5 +55,37 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:unit
       - run: pnpm build
+      # Bundles the Worker with wrangler's own esbuild, as a release would.
+      # Vitest's Vite pipeline can hide imports wrangler can't bundle.
+      - run: pnpm check:bundle
       - run: pnpm test:worker
       - run: pnpm test:site
+
+      - if: inputs.upload-dist
+        uses: actions/upload-artifact@v7
+        with:
+          name: marketing-dist
+          path: marketing/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: marketing/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: marketing/.nvmrc
+
+      # Reads the lockfile against the registry's advisories; nothing is
+      # installed. Fails on an advisory of any severity.
+      - run: pnpm audit

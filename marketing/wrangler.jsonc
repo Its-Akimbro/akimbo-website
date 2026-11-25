@@ -3,6 +3,9 @@
   "name": "akimbo-marketing",
   "main": "worker/index.ts",
   "compatibility_date": "2026-11-01",
+  // Each `wrangler versions upload` from the release workflow gets a preview
+  // URL, which the owner checks before approving promotion.
+  "preview_urls": true,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
