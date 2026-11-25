@@ -5,8 +5,20 @@ The public site and client portal for Akimbo Technology LLC, an infrastructure-f
 ## Language
 
 **Customer**:
-An organization the MSP provides managed infrastructure services to; represented in NetBox as exactly one Tenant.
+An organization on a Plan, which the MSP provides managed infrastructure services to; represented in NetBox as exactly one Tenant.
 _Avoid_: Client, account, tenant (outside NetBox context)
+
+**Audit Client**:
+An organization that has bought a Network Audit but not (yet) signed a Plan; becomes a Customer on signing.
+_Avoid_: Prospect, lead, Customer
+
+**Network Audit**:
+The fixed-price, one-site assessment of a business's infrastructure that is the MSP's entry offer; its report belongs to the buyer.
+_Avoid_: Assessment, health check, IT audit
+
+**Plan**:
+A month-to-month managed-services subscription for a Customer's sites, in one of three tiers: Essentials, Managed, or Managed + Servers.
+_Avoid_: Contract, package, subscription
 
 **Portal User**:
 A person who logs into the Client Portal on behalf of exactly one Customer.
