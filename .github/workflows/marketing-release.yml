@@ -20,7 +20,8 @@ permissions:
   contents: read
 
 # One release at a time, so promotions can't land out of order. A run waiting
-# for approval is never cancelled by a newer tag; the newer one queues.
+# for approval keeps running; a newer tag waits behind it. GitHub keeps only
+# one waiting run per group, so a third tag cancels the second.
 concurrency:
   group: marketing-release
   cancel-in-progress: false
@@ -35,6 +36,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       version: ${{ steps.check.outputs.version }}
+      tarball: ${{ steps.check.outputs.tarball }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -53,6 +55,7 @@ jobs:
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tarball=marketing-$version-dist.tar.gz" >> "$GITHUB_OUTPUT"
 
   ci:
     name: CI
@@ -71,7 +74,7 @@ jobs:
       id-token: write
       attestations: write
     env:
-      TARBALL: marketing-${{ needs.verify-tag.outputs.version }}-dist.tar.gz
+      TARBALL: ${{ needs.verify-tag.outputs.tarball }}
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -111,7 +114,7 @@ jobs:
       run:
         working-directory: marketing
     env:
-      TARBALL: marketing-${{ needs.verify-tag.outputs.version }}-dist.tar.gz
+      TARBALL: ${{ needs.verify-tag.outputs.tarball }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -138,7 +141,8 @@ jobs:
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$TARBALL" --dir "$RUNNER_TEMP"
           gh attestation verify "$RUNNER_TEMP/$TARBALL" \
             --repo "$GITHUB_REPOSITORY" \
-            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/marketing-release.yml"
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/marketing-release.yml" \
+            --source-ref "refs/tags/$TAG"
           rm -rf dist && mkdir dist
           tar -xzf "$RUNNER_TEMP/$TARBALL" -C dist
 

@@ -32,7 +32,7 @@ To try the `www` redirect locally: `curl -i -H 'Host: www.akimbo.technology' htt
 
 The palette, type scale and fonts live in one shared Tailwind v4 file, `brand/theme.css`, which the Client Portal will import too (ADR 0001). The fonts are self-hosted OFL files in `brand/fonts/`, so no page requests a font CDN. `marketing/src/styles/global.css` imports Tailwind and then the theme.
 
-Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which supplies the meta tags, the header (with the audit CTA and "Log in") and the footer. The legal pages wrap theirs in `LegalLayout.astro`, which adds the effective date and the "draft pending attorney review" notice. Site-wide facts such as the portal URL, the legal links and the header nav are in `marketing/src/site.ts`. When a page lands, add it to `NAV` there. Content the owner hasn't supplied yet goes in `marketing/src/placeholders.ts`, marked `[TBD: …]`, so `grep -r "TBD:"` finds every placeholder before launch.
+Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which supplies the meta tags, the header (with the audit CTA and "Log in") and the footer. The legal pages wrap theirs in `LegalLayout.astro`, which adds the effective date and the "draft pending attorney review" notice. Site-wide facts such as the portal URL, the legal links and the header nav are in `marketing/src/site.ts`. When a page lands, add it to `NAV` there. Content the owner hasn't supplied yet goes in `marketing/src/placeholders.ts`, marked `[TBD: …]` (placeholder images go in `placeholder-assets.ts`, because the Worker imports `placeholders.ts` and can't bundle images), so `grep -r "TBD:"` finds every placeholder before launch.
 
 ### Check and test
 
@@ -49,7 +49,7 @@ When you write Worker tests, use `createHarness()`. Give it fake static assets (
 
 ### CI
 
-`.github/workflows/marketing-ci.yml` runs on every PR (and on pushes to `main`) that touches `marketing/**` or the workflow itself. It installs, lints, type-checks, builds, bundles the Worker (`pnpm check:bundle`), and then runs the test suites. A separate **Dependency audit** job runs `pnpm audit` against the lockfile and fails on an advisory of any severity. Because of the path filters, a PR that doesn't touch the site doesn't run the job. If the job becomes a required check under branch protection, a PR outside these paths will wait on a check that never runs. Use a ruleset that only requires it when it runs, or add a no-op fallback job.
+`.github/workflows/marketing-ci.yml` runs on every PR (and on pushes to `main`) that touches `marketing/**` or the workflow itself. It installs, lints, type-checks, builds, bundles the Worker (`pnpm check:bundle`), and then runs the test suites. A separate **Dependency audit** job runs `pnpm audit` against the lockfile and fails on an advisory of any severity. Because of the path filters, a PR that doesn't touch the site doesn't run these jobs. If they become required checks under branch protection, a PR outside these paths will wait on a check that never runs. Use a ruleset that only requires it when it runs, or add a no-op fallback job.
 
 ### Dependencies
 
