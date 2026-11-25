@@ -1,3 +1,4 @@
+import { CONTACT_ENDPOINT } from "../src/contact-form";
 import { handleContact } from "./contact";
 import type { Env } from "./env";
 
@@ -11,7 +12,7 @@ export default {
       return Response.redirect(url.toString(), 308);
     }
 
-    if (url.pathname === "/api/contact") {
+    if (url.pathname === CONTACT_ENDPOINT) {
       return handleContact(request, env);
     }
 

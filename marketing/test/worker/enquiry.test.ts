@@ -79,6 +79,30 @@ describe("POST /api/contact, general enquiry", () => {
     expect(response.headers.get("location")).toBe("https://akimbo.technology/contact/thanks/");
     expect(postmarkCalls(harness)).toHaveLength(1);
   });
+
+  it("accepts a multipart form post", async () => {
+    const harness = site();
+    const body = new FormData();
+    for (const [name, value] of Object.entries(validEnquiry)) body.append(name, value);
+
+    const response = await harness.fetch("https://akimbo.technology/api/contact", {
+      method: "POST",
+      body,
+    });
+
+    expect(response.status).toBe(303);
+    expect(postmarkCalls(harness)).toHaveLength(1);
+  });
+
+  it("answers a client that asks for JSON with 200 JSON", async () => {
+    const harness = site();
+
+    const response = await submit(harness, validEnquiry, { accept: "application/json" });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(postmarkCalls(harness)).toHaveLength(1);
+  });
 });
 
 describe("enquiry validation", () => {
@@ -106,6 +130,20 @@ describe("enquiry validation", () => {
 
     expect(status).toBe(422);
     expect(body.errors).toEqual({ name: "Enter your name." });
+  });
+
+  it("treats a field of only control characters as missing", async () => {
+    const harness = site();
+
+    const { status, body } = await submitForErrors(harness, {
+      ...validEnquiry,
+      name: "\u0001\u0007",
+      message: "\u0000\u001b",
+    });
+
+    expect(status).toBe(422);
+    expect(body.errors).toEqual({ name: "Enter your name.", message: "Enter a message." });
+    expect(harness.upstreamRequests).toHaveLength(0);
   });
 
   it("caps field lengths", async () => {
@@ -157,6 +195,9 @@ describe("enquiry validation", () => {
     "ada@",
     "@example.com",
     "ada@example",
+    "ada@-example.com",
+    "ada@example-.com",
+    "ada@example..com",
     "ada lovelace@example.com",
     "ada@example.com, eve@example.com",
     "Ada <ada@example.com>",
@@ -283,9 +324,24 @@ describe("spam protection", () => {
       without(validEnquiry, "cf-turnstile-response"),
     );
 
+    // Turnstile needs JavaScript, so a visitor with it all switched off can't
+    // retry their way through: point them at email instead.
     expect(status).toBe(422);
-    expect(body.errors).toHaveProperty("turnstile");
+    expect(body.errors).toEqual({
+      turnstile:
+        "We couldn't run our spam check, which needs JavaScript. Please email hello@akimbo.technology instead.",
+    });
     expect(harness.upstreamRequests).toHaveLength(0);
+  });
+
+  it("puts the email fallback first on the page a no-JavaScript visitor sees", async () => {
+    const response = await submit(site(), without(validEnquiry, "cf-turnstile-response"));
+
+    const page = await response.text();
+    expect(page.indexOf('href="mailto:hello@akimbo.technology"')).toBeGreaterThan(-1);
+    expect(page.indexOf('href="mailto:hello@akimbo.technology"')).toBeLessThan(
+      page.indexOf('href="/contact/"'),
+    );
   });
 
   it("checks the fields before spending the Turnstile token", async () => {

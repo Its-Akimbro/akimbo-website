@@ -2,12 +2,14 @@
 // `hello@` shared mailbox (ADR 0003). Stores nothing.
 import {
   CONFIRMATION_PATH,
+  CONTACT_ENDPOINT,
+  CONTACT_PAGE_PATH,
   HONEYPOT_FIELD,
   MAX_LENGTH,
   TURNSTILE_FIELD,
 } from "../src/contact-form";
 import { findService } from "../src/services";
-import { CONTACT_EMAIL } from "../src/site";
+import { CONTACT_EMAIL, SITE_NAME } from "../src/site";
 import type { Env } from "./env";
 
 const POSTMARK_EMAIL_API = "https://api.postmarkapp.com/email";
@@ -18,8 +20,11 @@ const FROM = "Akimbo Technology website <enquiries@notify.akimbo.technology>";
 const TO = CONTACT_EMAIL;
 const TURNSTILE_SITEVERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const TURNSTILE_FAILED = "We couldn't confirm you're not a bot. Please try again.";
+/** Turnstile needs JavaScript; a visitor with it all off can only email. */
+const TURNSTILE_MISSING = `We couldn't run our spam check, which needs JavaScript. Please email ${TO} instead.`;
 
-interface Enquiry {
+/** An Enquiry sent from the General enquiry form (`kind=enquiry`). */
+interface GeneralEnquiry {
   name: string;
   email: string;
   message: string;
@@ -41,9 +46,12 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
   }
 
   // Browsers submit line breaks as CRLF; normalise so lengths match maxlength.
+  // Control characters are dropped before anything checks or uses a value.
   const field = (name: string) => {
     const value = form.get(name);
-    return typeof value === "string" ? value.replace(/\r\n?/g, "\n").trim() : "";
+    return typeof value === "string"
+      ? value.replace(/\r\n?/g, "\n").replace(CONTROL_CHARS, "").trim()
+      : "";
   };
   // A bot filled the hidden field: look successful, send nothing.
   if (field(HONEYPOT_FIELD)) {
@@ -51,7 +59,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
     return confirmed(request);
   }
 
-  const enquiry: Enquiry = {
+  const enquiry: GeneralEnquiry = {
     name: field("name"),
     email: field("email"),
     message: field("message"),
@@ -62,8 +70,8 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
   const token = field(TURNSTILE_FIELD);
   const errors: FieldErrors = {
     ...kindErrors(field("kind")),
-    ...enquiryErrors(enquiry),
-    ...(token ? {} : { turnstile: TURNSTILE_FAILED }),
+    ...generalEnquiryErrors(enquiry),
+    ...(token ? {} : { turnstile: TURNSTILE_MISSING }),
   };
   if (Object.keys(errors).length > 0) {
     log({ outcome: "invalid" });
@@ -88,7 +96,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
     return validationFailed(request, { turnstile: TURNSTILE_FAILED });
   }
 
-  const messageId = await sendEmail(send, env, enquiryEmail(enquiry));
+  const messageId = await sendEmail(send, env, generalEnquiryEmail(enquiry));
   if (!messageId) {
     log({ outcome: "postmark_error" });
     return serviceFailed(request);
@@ -104,7 +112,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
  * can quote the input back.
  */
 function log(entry: { outcome: string; messageId?: string }): void {
-  console.log(JSON.stringify({ route: "/api/contact", ...entry }));
+  console.log(JSON.stringify({ route: CONTACT_ENDPOINT, ...entry }));
 }
 
 /** Cloudflare siteverify's verdict on the widget's token, or "error" if it couldn't say. */
@@ -130,7 +138,7 @@ async function verifyTurnstile(
 async function sendEmail(
   send: typeof fetch,
   env: Env,
-  email: ReturnType<typeof enquiryEmail>,
+  email: ReturnType<typeof generalEnquiryEmail>,
 ): Promise<string | undefined> {
   try {
     const response = await send(POSTMARK_EMAIL_API, {
@@ -175,41 +183,33 @@ function kindErrors(kind: string): FieldErrors {
  * An email address with no spaces, quotes, commas or angle brackets, so it
  * can only ever be one plain address, and a dotted domain.
  */
-const EMAIL = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/;
+const EMAIL =
+  /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
 
-function enquiryErrors(enquiry: Enquiry): FieldErrors {
+/** "Keep your name to 100 characters or fewer." */
+function tooLong(what: string, field: keyof typeof MAX_LENGTH): string {
+  return `Keep ${what} to ${MAX_LENGTH[field].toLocaleString("en-US")} characters or fewer.`;
+}
+
+function generalEnquiryErrors(enquiry: GeneralEnquiry): FieldErrors {
   const errors: FieldErrors = {};
 
-  const check = (
-    field: keyof Enquiry,
-    { required, max }: { required?: string; max: { length: number; message: string } },
-  ) => {
+  const check = (field: keyof typeof MAX_LENGTH, what: string, required?: string) => {
     const value = enquiry[field];
     if (!value) {
       if (required) errors[field] = required;
-    } else if (value.length > max.length) {
-      errors[field] = max.message;
+    } else if (value.length > MAX_LENGTH[field]) {
+      errors[field] = tooLong(what, field);
     }
   };
 
-  check("name", {
-    required: "Enter your name.",
-    max: { length: MAX_LENGTH.name, message: "Keep your name to 100 characters or fewer." },
-  });
-  check("email", {
-    required: "Enter your email address.",
-    max: { length: MAX_LENGTH.email, message: "Keep your email address to 254 characters or fewer." },
-  });
+  check("name", "your name", "Enter your name.");
+  check("email", "your email address", "Enter your email address.");
   if (enquiry.email && !errors.email && !EMAIL.test(enquiry.email)) {
     errors.email = "Enter an email address like name@example.com.";
   }
-  check("business", {
-    max: { length: MAX_LENGTH.business, message: "Keep the business name to 150 characters or fewer." },
-  });
-  check("message", {
-    required: "Enter a message.",
-    max: { length: MAX_LENGTH.message, message: "Keep your message to 5,000 characters or fewer." },
-  });
+  check("business", "the business name");
+  check("message", "your message", "Enter a message.");
   if (enquiry.service && !findService(enquiry.service)) {
     errors.service = "Choose a service from the list.";
   }
@@ -219,8 +219,14 @@ function enquiryErrors(enquiry: Enquiry): FieldErrors {
 
 // --- Responses -------------------------------------------------------------
 
-/** Send the browser to the confirmation page (303, so it follows with a GET). */
+/**
+ * Success: 200 JSON for the enhanced form, or send the browser to the
+ * confirmation page (303, so it follows with a GET).
+ */
 function confirmed(request: Request): Response {
+  if (wantsJson(request)) {
+    return Response.json({ ok: true });
+  }
   return Response.redirect(new URL(CONFIRMATION_PATH, request.url).toString(), 303);
 }
 
@@ -251,7 +257,7 @@ function validationFailed(request: Request, errors: FieldErrors): Response {
     `<ul>${Object.values(errors)
       .map((message) => `<li>${escapeHtml(message)}</li>`)
       .join("")}</ul>`,
-    `<p><a href="/contact/">Go back to the form</a> and try again, or email <a href="mailto:${TO}">${TO}</a>.</p>`,
+    `<p>You can email <a href="mailto:${TO}">${TO}</a> instead, or <a href="${CONTACT_PAGE_PATH}">go back to the form</a> and try again.</p>`,
   ]);
 }
 
@@ -261,7 +267,7 @@ function htmlPage(status: number, title: string, body: string[]): Response {
     "<!doctype html>",
     '<html lang="en">',
     '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">',
-    `<meta name="robots" content="noindex"><title>${escapeHtml(title)} | Akimbo Technology</title></head>`,
+    `<meta name="robots" content="noindex"><title>${escapeHtml(title)} | ${SITE_NAME}</title></head>`,
     `<body><main><h1>${escapeHtml(title)}</h1>`,
     ...body,
     "</main></body></html>",
@@ -281,8 +287,8 @@ function escapeHtml(value: string): string {
 
 // --- The email -------------------------------------------------------------
 
-/** The Postmark API body for an enquiry. */
-function enquiryEmail(enquiry: Enquiry) {
+/** The Postmark API body for a General enquiry. */
+function generalEnquiryEmail(enquiry: GeneralEnquiry) {
   const name = oneLine(enquiry.name);
   const business = oneLine(enquiry.business);
   const service = findService(enquiry.service);
@@ -312,26 +318,19 @@ function enquiryEmail(enquiry: Enquiry) {
 
 const NOT_GIVEN = "(not given)";
 
-/** Control characters other than tab and newline; CR is one of them. */
+/** Control characters other than tab and newline (CR included: see `field`). */
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u0008\u000b-\u001f\u007f]/g;
 
 /**
- * A value made safe for one line of the body or a header: CR/LF and runs of
- * whitespace become a single space and control characters are dropped.
+ * A value made safe for one line of the body or a header: line breaks and
+ * runs of whitespace become a single space.
  */
 function oneLine(value: string): string {
-  return value
-    .replace(/[\r\n]+/g, " ")
-    .replace(CONTROL_CHARS, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return value.replace(/\s+/g, " ").trim();
 }
 
 /** A multi-line value indented under its label, so no line can pass for a label. */
 function block(value: string): string[] {
-  return value
-    .replace(CONTROL_CHARS, "")
-    .split("\n")
-    .map((line) => `  ${line.trimEnd()}`);
+  return value.split("\n").map((line) => `  ${line.trimEnd()}`);
 }

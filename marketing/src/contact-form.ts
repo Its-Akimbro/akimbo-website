@@ -2,6 +2,7 @@
 // /api/contact handler: field names and length caps both sides enforce.
 
 export const CONTACT_ENDPOINT = "/api/contact";
+export const CONTACT_PAGE_PATH = "/contact/";
 export const CONFIRMATION_PATH = "/contact/thanks/";
 
 /** Longest accepted value of each free-text field, in characters. */
