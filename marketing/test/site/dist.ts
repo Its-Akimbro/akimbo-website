@@ -145,6 +145,11 @@ export interface Link {
   url: URL;
 }
 
+/** A same-site URL as a visitor sees it in the address bar: "/contact/?service=network-audit". */
+export function sitePath(url: URL): string {
+  return `${url.pathname}${url.search}`;
+}
+
 /** Every `<a href>` on a page, or inside `scope` (a CSS selector) if given. */
 export function links(page: Page, scope?: string): Link[] {
   const base = pageUrl(page);
