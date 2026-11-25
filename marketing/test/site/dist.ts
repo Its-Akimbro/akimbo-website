@@ -1,7 +1,7 @@
 // Seam 2: the built site. Reads Astro's static output in dist/ (run
 // `pnpm build` first) and answers questions a visitor could observe.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeType, parse, type HTMLElement, type Node } from "node-html-parser";
 
@@ -10,7 +10,9 @@ export const SITE_ORIGIN = "https://akimbo.technology";
 export const PORTAL_ORIGIN = "https://portal.akimbo.technology";
 /** Origins that count as this site; `www` redirects to the apex. */
 const SITE_ORIGINS = new Set([SITE_ORIGIN, "https://www.akimbo.technology"]);
-export const DIST = fileURLToPath(new URL("../../dist/", import.meta.url));
+// Built from a path, not `new URL(…, import.meta.url)`, so it also works under
+// happy-dom (seam 3), whose `URL` global fileURLToPath won't accept.
+export const DIST = join(dirname(fileURLToPath(import.meta.url)), "../../dist/");
 
 if (!existsSync(join(DIST, "index.html"))) {
   throw new Error(`No built site at ${DIST}. Run \`pnpm build\` first.`);

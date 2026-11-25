@@ -297,6 +297,23 @@ describe("/contact page", () => {
   });
 });
 
+describe("/contact page script", () => {
+  it("is served by this site, as a module, on /contact only", () => {
+    const scripts = (p: Page) =>
+      p.html
+        .querySelectorAll('script[type="module"][src]')
+        .map((s) => new URL(s.getAttribute("src")!, new URL(p.path, SITE_ORIGIN)));
+    const contactScripts = scripts(page("/contact/"));
+
+    expect(contactScripts).toHaveLength(1);
+    expect(servedFile(contactScripts[0].pathname)).toBeDefined();
+    const elsewhere = pages()
+      .filter((p) => p.path !== "/contact/")
+      .flatMap((p) => scripts(p).map((url) => `${p.path} → ${url.pathname}`));
+    expect(elsewhere).toEqual([]);
+  });
+});
+
 describe("/contact/thanks/", () => {
   it("is kept out of search results", () => {
     const thanks = page("/contact/thanks/");

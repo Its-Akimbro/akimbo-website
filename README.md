@@ -41,11 +41,13 @@ Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which 
 | `pnpm lint` | ESLint over the site, Worker and tests. |
 | `pnpm typecheck` | `astro check`, covering `.astro` and TypeScript files (Worker and tests included). |
 | `pnpm test:worker` | **Seam 1.** Calls the Worker's fetch handler with built `Request`s and a test environment of fakes (`test/worker/harness.ts`). |
-| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin; every placeholder is marked `[TBD: …]`; About has a self-hosted service-area map; the legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. Run `pnpm build` first. |
-| `pnpm test` | Both test suites. |
+| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin; every placeholder is marked `[TBD: …]`; About has a self-hosted service-area map; the legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. **Seam 3** runs in the same project: `test/site/contact-page.test.ts` loads the built `/contact` page into happy-dom, runs the contact page script (`src/contact-page.ts`) on it, and sends its requests to the Worker's fetch handler. It covers the tabs and their keys, the `?service=` preset, inline validation and the in-page results. Run `pnpm build` first. |
+| `pnpm test` | All the test suites. |
 | `pnpm check:bundle` | Bundles the Worker with `wrangler deploy --dry-run`, the way a release uploads it, without deploying. Run `pnpm build` first. Vitest bundles through Vite, which can load files (such as `.svg`) that wrangler can't, so this check catches a Worker import that only works under test. |
 
 When you write Worker tests, use `createHarness()`. Give it fake static assets (`assets`), fake upstreams keyed by origin (`upstreams`, e.g. Turnstile siteverify or Postmark), and config overrides (`vars`). Then assert on the `Response` and on `assetRequests` / `upstreamRequests`. The Worker must make upstream calls through `env.fetch ?? fetch`, so that the fakes see them.
+
+The contact forms work without JavaScript. With it, `src/contact-page.ts` turns them into tabs, presets the service from `?service=`, checks each field by the Worker's own rules (shared in `src/contact-form.ts`) and posts JSON to `/api/contact`, showing the confirmation or errors in the page. When sending fails, it shows a `mailto:` link. Its tests call `openContactPage()` from `test/site/contact-page.ts` and act through roles, labels and keys, as a visitor would. A test file that uses it starts with `// @vitest-environment happy-dom`.
 
 ### CI
 

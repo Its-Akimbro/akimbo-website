@@ -1,13 +1,18 @@
 // POST /api/contact: turns a contact-form submission into one email in the
 // `hello@` shared mailbox (ADR 0003). Stores nothing.
 import {
+  type AuditRequest,
   CONFIRMATION_PATH,
   CONTACT_ENDPOINT,
   CONTACT_PAGE_PATH,
   DEVICE_COUNTS,
+  type FieldErrors,
+  fieldValue,
+  type GeneralEnquiry,
   HONEYPOT_FIELD,
   isDeviceCount,
-  MAX_LENGTH,
+  readSubmission,
+  SEND_FAILED,
   TURNSTILE_FIELD,
 } from "../src/contact-form";
 import { AUDIT } from "../src/pricing";
@@ -26,32 +31,6 @@ const TURNSTILE_FAILED = "We couldn't confirm you're not a bot. Please try again
 /** Turnstile needs JavaScript; a visitor with it all off can only email. */
 const TURNSTILE_MISSING = `We couldn't run our spam check, which needs JavaScript. Please email ${TO} instead.`;
 
-/** An Enquiry sent from the General enquiry form (`kind=enquiry`). */
-interface GeneralEnquiry {
-  name: string;
-  email: string;
-  message: string;
-  business: string;
-  service: string;
-}
-
-/** An audit request sent from the Book an audit form (`kind=audit`). */
-interface AuditRequest {
-  name: string;
-  business: string;
-  email: string;
-  town: string;
-  devices: string;
-  phone: string;
-  timing: string;
-  notes: string;
-  /** The service page the visitor came from, if any. */
-  service: string;
-}
-
-/** Per-field error messages, keyed by form field name. */
-type FieldErrors = Record<string, string>;
-
 /** The Postmark API body for one email to `hello@`. */
 interface Email {
   MessageStream: string;
@@ -64,70 +43,31 @@ interface Email {
   TrackLinks: "None";
 }
 
-/**
- * The submission's field errors, by its `kind`, and the email it would send.
- * The email is only meaningful when there are no errors.
- */
-function readSubmission(field: (name: string) => string): { errors: FieldErrors; email: Email } {
-  const kind = field("kind");
-  if (kind === "audit") {
-    const audit: AuditRequest = {
-      name: field("name"),
-      business: field("business"),
-      email: field("email"),
-      town: field("town"),
-      devices: field("devices"),
-      phone: field("phone"),
-      timing: field("timing"),
-      notes: field("notes"),
-      service: field("service"),
-    };
-    return { errors: auditRequestErrors(audit), email: auditEmail(audit) };
-  }
-  const enquiry: GeneralEnquiry = {
-    name: field("name"),
-    email: field("email"),
-    message: field("message"),
-    business: field("business"),
-    service: field("service"),
-  };
-  return {
-    errors: {
-      ...(kind === "enquiry" ? {} : { kind: "Choose which form you are sending." }),
-      ...generalEnquiryErrors(enquiry),
-    },
-    email: generalEnquiryEmail(enquiry),
-  };
-}
-
 export async function handleContact(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
   }
 
-  const form = await readForm(request);
+  const form = await readBody(request);
   if (!form) {
-    return new Response("Send the form as a form post", { status: 415 });
+    return new Response("Send the form as a form post or a JSON object", { status: 415 });
   }
 
-  // Browsers submit line breaks as CRLF; normalise so lengths match maxlength.
-  // Control characters are dropped before anything checks or uses a value.
-  const field = (name: string) => {
-    const value = form.get(name);
-    return typeof value === "string"
-      ? value.replace(/\r\n?/g, "\n").replace(CONTROL_CHARS, "").trim()
-      : "";
-  };
+  const field = (name: string) => fieldValue(form.get(name));
   // A bot filled the hidden field: look successful, send nothing.
   if (field(HONEYPOT_FIELD)) {
     log({ outcome: "honeypot" });
     return confirmed(request);
   }
 
-  const { errors: fieldErrors, email } = readSubmission(field);
+  const submission = readSubmission((name) => form.get(name));
+  const email =
+    submission.kind === "audit"
+      ? auditEmail(submission.audit)
+      : generalEnquiryEmail(submission.enquiry);
   const token = field(TURNSTILE_FIELD);
   const errors: FieldErrors = {
-    ...fieldErrors,
+    ...submission.errors,
     ...(token ? {} : { turnstile: TURNSTILE_MISSING }),
   };
   if (Object.keys(errors).length > 0) {
@@ -217,94 +157,37 @@ async function sendEmail(
   }
 }
 
-/** The submitted form, or undefined if the body isn't a form post. */
-async function readForm(request: Request): Promise<FormData | undefined> {
+/**
+ * The submitted fields, by name: a FormData for a form post, or a JSON
+ * object's properties. A value that isn't a string counts as missing.
+ */
+interface SubmittedFields {
+  get(name: string): unknown;
+}
+
+/**
+ * The submitted fields: a form post (no JavaScript) or a JSON object (the
+ * enhanced form, #40). Undefined if the body is neither.
+ */
+async function readBody(request: Request): Promise<SubmittedFields | undefined> {
   const type = request.headers.get("content-type") ?? "";
-  if (!/^(application\/x-www-form-urlencoded|multipart\/form-data)\b/i.test(type)) {
-    return undefined;
-  }
   try {
-    return await request.formData();
+    if (isJson(type)) {
+      const body: unknown = await request.json();
+      if (typeof body !== "object" || body === null || Array.isArray(body)) return undefined;
+      return { get: (name) => (Object.hasOwn(body, name) ? (body as Record<string, unknown>)[name] : undefined) };
+    }
+    if (/^(application\/x-www-form-urlencoded|multipart\/form-data)\b/i.test(type)) {
+      return await request.formData();
+    }
   } catch {
-    return undefined;
+    // A malformed body: answered like one of the wrong type.
   }
+  return undefined;
 }
 
-// --- Validation ------------------------------------------------------------
-
-/**
- * An email address with no spaces, quotes, commas or angle brackets, so it
- * can only ever be one plain address, and a dotted domain.
- */
-const EMAIL =
-  /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
-
-/** "Keep your name to 100 characters or fewer." */
-function tooLong(what: string, field: keyof typeof MAX_LENGTH): string {
-  return `Keep ${what} to ${MAX_LENGTH[field].toLocaleString("en-US")} characters or fewer.`;
-}
-
-/**
- * A checker for one submission's fields: `text` checks a capped free-text
- * field, `email` the submitter's address and `service` the allow-listed
- * service slug. Errors collect in `errors`.
- */
-function fieldChecker(values: Partial<Record<string, string>>) {
-  const errors: FieldErrors = {};
-
-  const text = (field: keyof typeof MAX_LENGTH, what: string, required?: string) => {
-    const value = values[field];
-    if (!value) {
-      if (required) errors[field] = required;
-    } else if (value.length > MAX_LENGTH[field]) {
-      errors[field] = tooLong(what, field);
-    }
-  };
-
-  const email = () => {
-    text("email", "your email address", "Enter your email address.");
-    if (values.email && !errors.email && !EMAIL.test(values.email)) {
-      errors.email = "Enter an email address like name@example.com.";
-    }
-  };
-
-  const service = () => {
-    if (values.service && !isServiceSlug(values.service)) {
-      errors.service = "Choose a service from the list.";
-    }
-  };
-
-  return { errors, text, email, service };
-}
-
-function generalEnquiryErrors(enquiry: GeneralEnquiry): FieldErrors {
-  const { errors, text, email, service } = fieldChecker({ ...enquiry });
-
-  text("name", "your name", "Enter your name.");
-  email();
-  text("business", "the business name");
-  text("message", "your message", "Enter a message.");
-  service();
-
-  return errors;
-}
-
-function auditRequestErrors(audit: AuditRequest): FieldErrors {
-  const { errors, text, email, service } = fieldChecker({ ...audit });
-
-  text("name", "your name", "Enter your name.");
-  text("business", "the business name", "Enter the business name.");
-  email();
-  text("town", "the town or city", "Enter the town or city the site is in.");
-  if (!isDeviceCount(audit.devices)) {
-    errors.devices = "Choose roughly how many infrastructure devices the site has.";
-  }
-  text("phone", "your phone number");
-  text("timing", "your preferred timing");
-  text("notes", "your notes");
-  service();
-
-  return errors;
+function isJson(contentType: string): boolean {
+  return /^application\/json\b/i.test(contentType);
 }
 
 // --- Responses -------------------------------------------------------------
@@ -320,12 +203,18 @@ function confirmed(request: Request): Response {
   return Response.redirect(new URL(CONFIRMATION_PATH, request.url).toString(), 303);
 }
 
-/** Whether the client asked for JSON (the enhanced form) rather than a page. */
+/**
+ * Whether the client wants a JSON reply rather than a page: it asked for
+ * one, or it sent JSON (the enhanced form).
+ */
 function wantsJson(request: Request): boolean {
-  return /\bapplication\/json\b/i.test(request.headers.get("accept") ?? "");
+  return (
+    /\bapplication\/json\b/i.test(request.headers.get("accept") ?? "") ||
+    isJson(request.headers.get("content-type") ?? "")
+  );
 }
 
-const SERVICE_FAILED = `We couldn't send your enquiry. Please email ${TO} instead.`;
+const SERVICE_FAILED = `${SEND_FAILED} Please email ${TO} instead.`;
 
 /** Turnstile or Postmark is down: hand the visitor the mailto: fallback. */
 function serviceFailed(request: Request): Response {
@@ -446,10 +335,6 @@ function serviceLabel(value: string): string {
 }
 
 const NOT_GIVEN = "(not given)";
-
-/** Control characters other than tab and newline (CR included: see `field`). */
-// eslint-disable-next-line no-control-regex
-const CONTROL_CHARS = /[\u0000-\u0008\u000b-\u001f\u007f]/g;
 
 /**
  * A value made safe for one line of the body or a header: line breaks and

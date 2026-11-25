@@ -1,6 +1,7 @@
 ---
 // The contact page: the Book an audit and General enquiry forms. Without
-// JavaScript both show, one after the other; #40 turns them into tabs.
+// JavaScript both show, one after the other, and post as plain forms. The
+// script below (#40) turns them into tabs and sends them in the page.
 import AuditForm from "../components/AuditForm.astro";
 import EnquiryForm from "../components/EnquiryForm.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -25,9 +26,29 @@ import { CONTACT_EMAIL } from "../site";
       >.
     </p>
 
-    <div class="relative mt-10 grid gap-16 lg:grid-cols-2">
-      <AuditForm />
-      <EnquiryForm />
+    {/* Each panel becomes a tab, named by its form's heading. */}
+    <div
+      data-contact-tabs
+      class="relative mt-10 grid gap-16 data-tabbed:gap-8 lg:[&:not([data-tabbed])]:grid-cols-2"
+    >
+      <div id="audit-panel" data-tab-panel><AuditForm /></div>
+      <div id="enquiry-panel" data-tab-panel><EnquiryForm /></div>
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  import { enhanceContactPage } from "../contact-page";
+
+  enhanceContactPage(document, {
+    search: location.search,
+    // Wrapped: the browser's fetch throws if called detached from window.
+    fetch: (input, init) => fetch(input, init),
+    resetTurnstile: (form) => {
+      const widget = form.querySelector<HTMLElement>(".cf-turnstile");
+      // Turnstile renders the widget itself (implicit rendering), so it is
+      // named by its container. The script may not have loaded.
+      if (widget) window.turnstile?.reset(widget);
+    },
+  });
+</script>
