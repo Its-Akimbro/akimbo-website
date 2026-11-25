@@ -1,0 +1,30 @@
+version: 2
+
+# Weekly, one grouped PR per ecosystem. Security updates are grouped too and
+# open as soon as an advisory lands; they ship within 7 days (spec #28).
+updates:
+  - package-ecosystem: npm # Dependabot's ecosystem name for pnpm too
+    directory: /marketing
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      marketing-deps:
+        applies-to: version-updates
+        patterns: ["*"]
+      marketing-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ["*"]
+      actions-security:
+        applies-to: security-updates
+        patterns: ["*"]

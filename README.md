@@ -43,9 +43,58 @@ Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which 
 | `pnpm test:worker` | **Seam 1.** Calls the Worker's fetch handler with built `Request`s and a test environment of fakes (`test/worker/harness.ts`). |
 | `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin; every placeholder is marked `[TBD: …]`; About has a self-hosted service-area map; the legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. Run `pnpm build` first. |
 | `pnpm test` | Both test suites. |
+| `pnpm check:bundle` | Bundles the Worker with `wrangler deploy --dry-run`, the way a release uploads it, without deploying. Run `pnpm build` first. Vitest bundles through Vite, which can load files (such as `.svg`) that wrangler can't, so this check catches a Worker import that only works under test. |
 
 When you write Worker tests, use `createHarness()`. Give it fake static assets (`assets`), fake upstreams keyed by origin (`upstreams`, e.g. Turnstile siteverify or Postmark), and config overrides (`vars`). Then assert on the `Response` and on `assetRequests` / `upstreamRequests`. The Worker must make upstream calls through `env.fetch ?? fetch`, so that the fakes see them.
 
 ### CI
 
-`.github/workflows/marketing-ci.yml` runs on every PR (and on pushes to `main`) that touches `marketing/**` or the workflow itself. It installs, lints, type-checks, builds, and then runs both test suites. Because of the path filters, a PR that doesn't touch the site doesn't run the job. If the job becomes a required check under branch protection, a PR outside these paths will wait on a check that never runs. Use a ruleset that only requires it when it runs, or add a no-op fallback job.
+`.github/workflows/marketing-ci.yml` runs on every PR (and on pushes to `main`) that touches `marketing/**` or the workflow itself. It installs, lints, type-checks, builds, bundles the Worker (`pnpm check:bundle`), and then runs the test suites. A separate **Dependency audit** job runs `pnpm audit` against the lockfile and fails on an advisory of any severity. Because of the path filters, a PR that doesn't touch the site doesn't run the job. If the job becomes a required check under branch protection, a PR outside these paths will wait on a check that never runs. Use a ruleset that only requires it when it runs, or add a no-op fallback job.
+
+### Dependencies
+
+Dependabot (`.github/dependabot.yml`) opens one grouped PR a week for the pnpm dependencies in `marketing/` and one for GitHub Actions, plus grouped security PRs as soon as an advisory lands. Security fixes ship within 7 days.
+
+### Release
+
+Releases follow ADR 0004 as amended by ADR 0005. To release, tag a commit that is already on `main`:
+
+```sh
+git switch main && git pull
+git tag -a marketing/v1.2.0 -m "marketing v1.2.0"
+git push origin marketing/v1.2.0
+```
+
+`.github/workflows/marketing-release.yml` then:
+
+1. **Refuses the tag** unless it is `marketing/vMAJOR.MINOR.PATCH` and points at a commit on `main`.
+2. **Reruns CI** on the tagged commit (the CI workflow, called as a reusable workflow) and keeps the `dist/` that CI built and tested.
+3. **Creates a GitHub Release** named after the tag, with that `dist/` attached as `marketing-<version>-dist.tar.gz` and a build-provenance attestation for it.
+4. **Uploads a Worker version** (`marketing-preview` Environment). It downloads the released tarball, checks its attestation with `gh attestation verify`, and runs `wrangler versions upload`. The job summary shows the version's **preview URL**. Nothing is live yet.
+5. **Promotes** (`marketing-production` Environment). The job waits for the owner to approve the deployment in the Actions run. After approval, it runs `wrangler versions deploy <version>@100%`.
+
+To skip a release, reject the deployment. The uploaded version stays unused. Copy and design are checked by hand on the preview URL before approving (spec #28, testing decisions).
+
+### Rollback
+
+From `marketing/`, logged in with `wrangler login` on the admin workstation:
+
+```sh
+pnpm exec wrangler rollback --message "<reason>"
+```
+
+This puts the previous deployed version back on 100% of traffic in seconds. To pick a specific version, run `pnpm exec wrangler deployments list` and then `pnpm exec wrangler rollback <version-id> --message "<reason>"`. A rollback doesn't touch Worker secrets. Afterwards, fix forward with a new `marketing/v*` tag.
+
+### Secrets and settings the release needs
+
+These are created by hand in the Cloudflare and GitHub setup ticket (#42). The workflows expect these names:
+
+| Name | Kind | Where | Notes |
+| --- | --- | --- | --- |
+| `marketing-preview` | GitHub Environment | repo settings | Deployment tags limited to `marketing/v*`. No reviewers. |
+| `marketing-production` | GitHub Environment | repo settings | Deployment tags limited to `marketing/v*`. Required reviewer: the owner, with "Prevent self-review" off, since the owner both tags and approves. |
+| `CLOUDFLARE_API_TOKEN` | Environment secret | both Environments | The Workers-scoped deploy token (Workers Scripts and routes only). It is never a repository secret. List it in the expiry register. |
+| `CLOUDFLARE_ACCOUNT_ID` | Repository variable | repo settings | Not a secret. |
+| `POSTMARK_TOKEN`, `TURNSTILE_SECRET` | Worker secrets | Cloudflare | Set from the admin workstation with `pnpm exec wrangler secret put <NAME>`. They carry over to every uploaded version and never pass through CI. |
+
+Preview URLs must be enabled on the account's `workers.dev` subdomain. `wrangler.jsonc` sets `preview_urls: true` for the Worker. If no preview URL comes back, the upload job fails rather than ask for approval blind.
