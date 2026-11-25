@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 
 export const SITE_ORIGIN = "https://akimbo.technology";
+/** The Client Portal is a separate app on its own hostname (ADR 0001, ADR 0005). */
+export const PORTAL_ORIGIN = "https://portal.akimbo.technology";
 /** Origins that count as this site; `www` redirects to the apex. */
 const SITE_ORIGINS = new Set([SITE_ORIGIN, "https://www.akimbo.technology"]);
 export const DIST = fileURLToPath(new URL("../../dist/", import.meta.url));
@@ -63,24 +65,129 @@ export function pages(): Page[] {
     }));
 }
 
+/** Whether a URL is served by this site (including `www`). */
+export function isSameSite(url: URL): boolean {
+  return SITE_ORIGINS.has(url.origin);
+}
+
+/** The page's own absolute URL, which its relative references resolve against. */
+function pageUrl(page: Page): URL {
+  return new URL(page.path, SITE_ORIGIN);
+}
+
+/** The URLs in an element's srcset (each candidate is "url [descriptor]"). */
+function srcsetValues(el: HTMLElement): string[] {
+  return (el.getAttribute("srcset") ?? "")
+    .split(",")
+    .map((candidate) => candidate.trim().split(/\s+/)[0]);
+}
+
+/** Inline content (data:, blob:, about:) that loads nothing from any origin. */
+const INLINE_SCHEMES = /^(data|blob|about):/i;
+
 /**
  * Same-site URLs a page links to or loads (href, src, srcset), resolved
  * against the page's own URL. Fragments and query strings are dropped.
  */
 export function internalReferences(page: Page): URL[] {
-  const base = new URL(page.path, SITE_ORIGIN);
+  const base = pageUrl(page);
   const attributeValues = page.html
     .querySelectorAll("[href], [src], [srcset]")
-    .flatMap((el) => [
-      el.getAttribute("href"),
-      el.getAttribute("src"),
-      ...(el.getAttribute("srcset") ?? "")
-        .split(",")
-        .map((candidate) => candidate.trim().split(/\s+/)[0]),
-    ])
+    .flatMap((el) => [el.getAttribute("href"), el.getAttribute("src"), ...srcsetValues(el)])
     .filter((value): value is string => Boolean(value));
 
-  return attributeValues
-    .map((value) => new URL(value, base))
-    .filter((url) => SITE_ORIGINS.has(url.origin));
+  return attributeValues.map((value) => new URL(value, base)).filter(isSameSite);
+}
+
+export interface Link {
+  /** The link's visible text, whitespace collapsed. */
+  text: string;
+  /** The href, resolved against the page's own URL. */
+  url: URL;
+}
+
+/** Every `<a href>` on a page, or inside `scope` (a CSS selector) if given. */
+export function links(page: Page, scope?: string): Link[] {
+  const base = pageUrl(page);
+  const roots = scope ? page.html.querySelectorAll(scope) : [page.html];
+  return roots.flatMap((root) =>
+    root.querySelectorAll("a[href]").map((a) => ({
+      text: a.textContent.replace(/\s+/g, " ").trim(),
+      url: new URL(a.getAttribute("href")!, base),
+    })),
+  );
+}
+
+/** Whether a URL points at the given site path on this site, ignoring a trailing slash. */
+export function isSitePath(url: URL, path: string): boolean {
+  return isSameSite(url) && url.pathname.replace(/(.)\/$/, "$1") === path;
+}
+
+/** `<link rel>` values that make the browser fetch or connect to the href. */
+const LOADING_RELS = new Set([
+  "stylesheet",
+  "icon",
+  "apple-touch-icon",
+  "manifest",
+  "preload",
+  "modulepreload",
+  "prefetch",
+  "preconnect",
+  "dns-prefetch",
+]);
+
+/**
+ * URLs in CSS `url(...)` and `@import`, resolved against `base`, plus those
+ * in any same-site stylesheet it imports, followed recursively.
+ */
+function cssUrls(css: string, base: URL, seen = new Set<string>()): URL[] {
+  const urls = [
+    ...css.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g),
+    ...css.matchAll(/@import\s+(['"])([^'"]+)\1/g),
+  ]
+    .map((m) => m[2])
+    .filter((ref) => !INLINE_SCHEMES.test(ref))
+    .map((ref) => new URL(ref, base));
+  return [...urls, ...urls.flatMap((url) => stylesheetUrls(url, seen))];
+}
+
+/** The URLs a same-site stylesheet loads, or none if `url` isn't one. */
+function stylesheetUrls(url: URL, seen: Set<string>): URL[] {
+  if (!isSameSite(url) || !url.pathname.endsWith(".css") || seen.has(url.pathname)) return [];
+  seen.add(url.pathname);
+  const file = servedFile(url.pathname);
+  return file ? cssUrls(readFileSync(join(DIST, file), "utf8"), url, seen) : [];
+}
+
+/**
+ * Every URL a browser would fetch or connect to when loading the page:
+ * src/srcset, data, loading `<link>`s, and `url()`/`@import` in inline styles
+ * and in the page's own stylesheets. Links a visitor clicks aren't included.
+ */
+export function loadedUrls(page: Page): URL[] {
+  const base = pageUrl(page);
+  const attributeUrls = page.html
+    .querySelectorAll("[src], [srcset], object[data], link[href]")
+    .flatMap((el) => {
+      const rels = (el.getAttribute("rel") ?? "").toLowerCase().split(/\s+/);
+      return [
+        el.getAttribute("src"),
+        el.getAttribute("data"),
+        el.tagName === "LINK" && rels.some((rel) => LOADING_RELS.has(rel))
+          ? el.getAttribute("href")
+          : undefined,
+        ...srcsetValues(el),
+      ];
+    })
+    .filter((value): value is string => Boolean(value) && !INLINE_SCHEMES.test(value!))
+    .map((value) => new URL(value, base));
+
+  const seen = new Set<string>();
+  const inlineCss = [
+    ...page.html.querySelectorAll("style").map((el) => el.textContent),
+    ...page.html.querySelectorAll("[style]").map((el) => el.getAttribute("style")!),
+  ].flatMap((css) => cssUrls(css, base, seen));
+  const stylesheetCss = attributeUrls.flatMap((url) => stylesheetUrls(url, seen));
+
+  return [...attributeUrls, ...inlineCss, ...stylesheetCss];
 }

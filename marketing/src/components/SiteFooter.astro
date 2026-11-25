@@ -1,0 +1,30 @@
+---
+import { CONTACT_EMAIL, LEGAL_LINKS, LEGAL_NAME, MAILING_ADDRESS } from "../site";
+---
+
+<footer class="bg-navy text-white">
+  <div class="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm sm:grid-cols-2 sm:px-6">
+    <address class="not-italic">
+      <p class="font-heading font-semibold">{LEGAL_NAME}</p>
+      {MAILING_ADDRESS.map((line) => <p>{line}</p>)}
+      <p class="mt-2">
+        <a href={`mailto:${CONTACT_EMAIL}`} class="text-white underline hover:no-underline">
+          {CONTACT_EMAIL}
+        </a>
+      </p>
+    </address>
+    <nav aria-label="Legal" class="sm:justify-self-end">
+      <ul class="flex flex-col gap-2 sm:items-end">
+        {
+          LEGAL_LINKS.map((link) => (
+            <li>
+              <a href={link.href} class="text-white underline hover:no-underline">
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</footer>

@@ -1,0 +1,21 @@
+---
+// The primary call to action. Red is reserved for this button. The focus
+// ring is navy with a white gap, so it shows on both navy and white bands.
+import { AUDIT_CTA } from "../site";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<a
+  href={AUDIT_CTA.href}
+  class:list={[
+    "inline-flex min-h-11 items-center justify-center rounded-md bg-red px-4 py-2 text-center font-semibold text-white hover:bg-red-dark focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:outline-none",
+    className,
+  ]}
+>
+  <slot>{AUDIT_CTA.label}</slot>
+</a>
