@@ -4,10 +4,13 @@ import {
   CONFIRMATION_PATH,
   CONTACT_ENDPOINT,
   CONTACT_PAGE_PATH,
+  DEVICE_COUNTS,
   HONEYPOT_FIELD,
+  isDeviceCount,
   MAX_LENGTH,
   TURNSTILE_FIELD,
 } from "../src/contact-form";
+import { AUDIT } from "../src/pricing";
 import { isServiceSlug, SERVICES } from "../src/services";
 import { CONTACT_EMAIL, SITE_NAME } from "../src/site";
 import type { Env } from "./env";
@@ -32,8 +35,70 @@ interface GeneralEnquiry {
   service: string;
 }
 
+/** An audit request sent from the Book an audit form (`kind=audit`). */
+interface AuditBooking {
+  name: string;
+  business: string;
+  email: string;
+  town: string;
+  devices: string;
+  phone: string;
+  timing: string;
+  notes: string;
+  /** The service page the visitor came from, if any. */
+  service: string;
+}
+
 /** Per-field error messages, keyed by form field name. */
 type FieldErrors = Record<string, string>;
+
+/** The Postmark API body for one email to `hello@`. */
+interface Email {
+  MessageStream: string;
+  From: string;
+  To: string;
+  ReplyTo: string;
+  Subject: string;
+  TextBody: string;
+  TrackOpens: false;
+  TrackLinks: "None";
+}
+
+/**
+ * The submission's field errors, by its `kind`, and the email it would send.
+ * The email is only meaningful when there are no errors.
+ */
+function readSubmission(field: (name: string) => string): { errors: FieldErrors; email: Email } {
+  const kind = field("kind");
+  if (kind === "audit") {
+    const booking: AuditBooking = {
+      name: field("name"),
+      business: field("business"),
+      email: field("email"),
+      town: field("town"),
+      devices: field("devices"),
+      phone: field("phone"),
+      timing: field("timing"),
+      notes: field("notes"),
+      service: field("service"),
+    };
+    return { errors: auditBookingErrors(booking), email: auditEmail(booking) };
+  }
+  const enquiry: GeneralEnquiry = {
+    name: field("name"),
+    email: field("email"),
+    message: field("message"),
+    business: field("business"),
+    service: field("service"),
+  };
+  return {
+    errors: {
+      ...(kind === "enquiry" ? {} : { kind: "Choose which form you are sending." }),
+      ...generalEnquiryErrors(enquiry),
+    },
+    email: generalEnquiryEmail(enquiry),
+  };
+}
 
 export async function handleContact(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
@@ -59,18 +124,10 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
     return confirmed(request);
   }
 
-  const enquiry: GeneralEnquiry = {
-    name: field("name"),
-    email: field("email"),
-    message: field("message"),
-    business: field("business"),
-    service: field("service"),
-  };
-
+  const { errors: fieldErrors, email } = readSubmission(field);
   const token = field(TURNSTILE_FIELD);
   const errors: FieldErrors = {
-    ...kindErrors(field("kind")),
-    ...generalEnquiryErrors(enquiry),
+    ...fieldErrors,
     ...(token ? {} : { turnstile: TURNSTILE_MISSING }),
   };
   if (Object.keys(errors).length > 0) {
@@ -96,7 +153,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
     return validationFailed(request, { turnstile: TURNSTILE_FAILED });
   }
 
-  const messageId = await sendEmail(send, env, generalEnquiryEmail(enquiry));
+  const messageId = await sendEmail(send, env, email);
   if (!messageId) {
     log({ outcome: "postmark_error" });
     return serviceFailed(request);
@@ -138,7 +195,7 @@ async function verifyTurnstile(
 async function sendEmail(
   send: typeof fetch,
   env: Env,
-  email: ReturnType<typeof generalEnquiryEmail>,
+  email: Email,
 ): Promise<string | undefined> {
   try {
     const response = await send(POSTMARK_EMAIL_API, {
@@ -175,10 +232,6 @@ async function readForm(request: Request): Promise<FormData | undefined> {
 
 // --- Validation ------------------------------------------------------------
 
-function kindErrors(kind: string): FieldErrors {
-  return kind === "enquiry" ? {} : { kind: "Choose which form you are sending." };
-}
-
 /**
  * An email address with no spaces, quotes, commas or angle brackets, so it
  * can only ever be one plain address, and a dotted domain.
@@ -191,11 +244,16 @@ function tooLong(what: string, field: keyof typeof MAX_LENGTH): string {
   return `Keep ${what} to ${MAX_LENGTH[field].toLocaleString("en-US")} characters or fewer.`;
 }
 
-function generalEnquiryErrors(enquiry: GeneralEnquiry): FieldErrors {
+/**
+ * A checker for one submission's fields: `text` checks a capped free-text
+ * field, `email` the submitter's address and `service` the allow-listed
+ * service slug. Errors collect in `errors`.
+ */
+function fieldChecker(values: Partial<Record<string, string>>) {
   const errors: FieldErrors = {};
 
-  const check = (field: keyof typeof MAX_LENGTH, what: string, required?: string) => {
-    const value = enquiry[field];
+  const text = (field: keyof typeof MAX_LENGTH, what: string, required?: string) => {
+    const value = values[field];
     if (!value) {
       if (required) errors[field] = required;
     } else if (value.length > MAX_LENGTH[field]) {
@@ -203,16 +261,48 @@ function generalEnquiryErrors(enquiry: GeneralEnquiry): FieldErrors {
     }
   };
 
-  check("name", "your name", "Enter your name.");
-  check("email", "your email address", "Enter your email address.");
-  if (enquiry.email && !errors.email && !EMAIL.test(enquiry.email)) {
-    errors.email = "Enter an email address like name@example.com.";
+  const email = () => {
+    text("email", "your email address", "Enter your email address.");
+    if (values.email && !errors.email && !EMAIL.test(values.email)) {
+      errors.email = "Enter an email address like name@example.com.";
+    }
+  };
+
+  const service = () => {
+    if (values.service && !isServiceSlug(values.service)) {
+      errors.service = "Choose a service from the list.";
+    }
+  };
+
+  return { errors, text, email, service };
+}
+
+function generalEnquiryErrors(enquiry: GeneralEnquiry): FieldErrors {
+  const { errors, text, email, service } = fieldChecker({ ...enquiry });
+
+  text("name", "your name", "Enter your name.");
+  email();
+  text("business", "the business name");
+  text("message", "your message", "Enter a message.");
+  service();
+
+  return errors;
+}
+
+function auditBookingErrors(booking: AuditBooking): FieldErrors {
+  const { errors, text, email, service } = fieldChecker({ ...booking });
+
+  text("name", "your name", "Enter your name.");
+  text("business", "the business name", "Enter the business name.");
+  email();
+  text("town", "the town or city", "Enter the town or city the site is in.");
+  if (!isDeviceCount(booking.devices)) {
+    errors.devices = "Choose roughly how many network devices the site has.";
   }
-  check("business", "the business name");
-  check("message", "your message", "Enter a message.");
-  if (enquiry.service && !isServiceSlug(enquiry.service)) {
-    errors.service = "Choose a service from the list.";
-  }
+  text("phone", "your phone number");
+  text("timing", "your preferred timing");
+  text("notes", "your notes");
+  service();
 
   return errors;
 }
@@ -288,10 +378,9 @@ function escapeHtml(value: string): string {
 // --- The email -------------------------------------------------------------
 
 /** The Postmark API body for a General enquiry. */
-function generalEnquiryEmail(enquiry: GeneralEnquiry) {
+function generalEnquiryEmail(enquiry: GeneralEnquiry): Email {
   const name = oneLine(enquiry.name);
   const business = oneLine(enquiry.business);
-  const slug = isServiceSlug(enquiry.service) ? enquiry.service : undefined;
 
   return {
     MessageStream: POSTMARK_STREAM,
@@ -305,7 +394,7 @@ function generalEnquiryEmail(enquiry: GeneralEnquiry) {
       `Name: ${name}`,
       `Email: ${enquiry.email}`,
       `Business: ${business || NOT_GIVEN}`,
-      `Service: ${slug ? `${SERVICES[slug].name} (${slug})` : NOT_GIVEN}`,
+      `Service: ${serviceLabel(enquiry.service)}`,
       "Message:",
       ...block(enquiry.message),
       "",
@@ -314,6 +403,46 @@ function generalEnquiryEmail(enquiry: GeneralEnquiry) {
     TrackOpens: false,
     TrackLinks: "None",
   };
+}
+
+/** The Postmark API body for a Network Audit booking. */
+function auditEmail(booking: AuditBooking): Email {
+  const name = oneLine(booking.name);
+  const business = oneLine(booking.business);
+  const town = oneLine(booking.town);
+  const devices = isDeviceCount(booking.devices) ? booking.devices : undefined;
+
+  return {
+    MessageStream: POSTMARK_STREAM,
+    From: FROM,
+    To: TO,
+    ReplyTo: booking.email,
+    Subject: `[Audit] ${[name, business, town].join(", ")}`,
+    TextBody: [
+      "Network Audit booking from the website contact form.",
+      "",
+      `Name: ${name}`,
+      `Business: ${business}`,
+      `Email: ${booking.email}`,
+      `Phone: ${oneLine(booking.phone) || NOT_GIVEN}`,
+      `Site town/city: ${town}`,
+      `Infrastructure devices: ${devices ? DEVICE_COUNTS[devices] : NOT_GIVEN}`,
+      `Over the ${AUDIT.maxDevices}-device audit limit: ${
+        devices === "gt25" ? "Yes, quote the add-on" : "No"
+      }`,
+      `Preferred timing: ${oneLine(booking.timing) || NOT_GIVEN}`,
+      `Referring service: ${serviceLabel(booking.service)}`,
+      ...(booking.notes ? ["Notes:", ...block(booking.notes)] : [`Notes: ${NOT_GIVEN}`]),
+      "",
+    ].join("\n"),
+    TrackOpens: false,
+    TrackLinks: "None",
+  };
+}
+
+/** "Managed networking (managed-networking)", or "(not given)". */
+function serviceLabel(value: string): string {
+  return isServiceSlug(value) ? `${SERVICES[value].name} (${value})` : NOT_GIVEN;
 }
 
 const NOT_GIVEN = "(not given)";
