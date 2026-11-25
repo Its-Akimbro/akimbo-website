@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 
 export const SITE_ORIGIN = "https://akimbo.technology";
+/** Origins that count as this site; `www` redirects to the apex. */
+const SITE_ORIGINS = new Set([SITE_ORIGIN, "https://www.akimbo.technology"]);
 export const DIST = fileURLToPath(new URL("../../dist/", import.meta.url));
 
 if (!existsSync(join(DIST, "index.html"))) {
@@ -37,7 +39,7 @@ export function sitemapUrls(): string[] {
  * resolves it (`/plans/` → `plans/index.html`, `/plans` → `plans.html` or
  * `plans/index.html`), or undefined if nothing in dist/ matches.
  */
-export function resolve(pathname: string): string | undefined {
+export function servedFile(pathname: string): string | undefined {
   const path = decodeURIComponent(pathname);
   const candidates = path.endsWith("/")
     ? [`${path}index.html`]
@@ -67,7 +69,7 @@ export function pages(): Page[] {
  */
 export function internalReferences(page: Page): URL[] {
   const base = new URL(page.path, SITE_ORIGIN);
-  const raw = page.html
+  const attributeValues = page.html
     .querySelectorAll("[href], [src], [srcset]")
     .flatMap((el) => [
       el.getAttribute("href"),
@@ -78,7 +80,7 @@ export function internalReferences(page: Page): URL[] {
     ])
     .filter((value): value is string => Boolean(value));
 
-  return raw
+  return attributeValues
     .map((value) => new URL(value, base))
-    .filter((url) => url.origin === SITE_ORIGIN);
+    .filter((url) => SITE_ORIGINS.has(url.origin));
 }

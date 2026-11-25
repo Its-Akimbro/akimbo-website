@@ -6,7 +6,8 @@ export default {
 
     if (url.hostname === `www.${env.APEX_HOST}`) {
       url.hostname = env.APEX_HOST;
-      return Response.redirect(url.toString(), 301);
+      // 308 keeps the method and body, so a POST to www still reaches the apex.
+      return Response.redirect(url.toString(), 308);
     }
 
     return env.ASSETS.fetch(request);

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DIST, internalReferences, pages, resolve, sitemapUrls, SITE_ORIGIN } from "./dist";
+import { DIST, internalReferences, pages, servedFile, sitemapUrls, SITE_ORIGIN } from "./dist";
 
 describe("built site", () => {
   it("is static files with no server entry point", () => {
@@ -17,7 +17,7 @@ describe("built site", () => {
   });
 
   it("has a page for every sitemap URL", () => {
-    const missing = sitemapUrls().filter((url) => !resolve(new URL(url).pathname));
+    const missing = sitemapUrls().filter((url) => !servedFile(new URL(url).pathname));
 
     expect(missing).toEqual([]);
   });
@@ -25,7 +25,7 @@ describe("built site", () => {
   it("has no broken internal links", () => {
     const broken = pages().flatMap((page) =>
       internalReferences(page)
-        .filter((url) => !resolve(url.pathname))
+        .filter((url) => !servedFile(url.pathname))
         .map((url) => `${page.path} → ${url.pathname}`),
     );
 
