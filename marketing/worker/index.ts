@@ -1,3 +1,4 @@
+import { handleContact } from "./contact";
 import type { Env } from "./env";
 
 export default {
@@ -8,6 +9,10 @@ export default {
       url.hostname = env.APEX_HOST;
       // 308 keeps the method and body, so a POST to www still reaches the apex.
       return Response.redirect(url.toString(), 308);
+    }
+
+    if (url.pathname === "/api/contact") {
+      return handleContact(request, env);
     }
 
     return env.ASSETS.fetch(request);

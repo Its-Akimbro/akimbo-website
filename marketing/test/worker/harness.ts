@@ -35,6 +35,8 @@ export function createHarness(options: HarnessOptions = {}): Harness {
 
   const env: Env = {
     APEX_HOST: "akimbo.technology",
+    POSTMARK_TOKEN: "test-postmark-token",
+    TURNSTILE_SECRET: "test-turnstile-secret",
     ...options.vars,
     ASSETS: {
       async fetch(input: Request | string | URL, init?: RequestInit) {
