@@ -5,6 +5,12 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: "unit",
+          include: ["test/unit/**/*.test.ts"],
+        },
+      },
+      {
+        test: {
           name: "worker",
           include: ["test/worker/**/*.test.ts"],
         },

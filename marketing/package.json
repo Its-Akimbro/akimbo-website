@@ -12,7 +12,8 @@
     "preview": "pnpm build && wrangler dev",
     "lint": "eslint .",
     "typecheck": "astro check",
-    "test": "pnpm test:worker && pnpm test:site",
+    "test": "pnpm test:unit && pnpm test:worker && pnpm test:site",
+    "test:unit": "vitest run --project unit",
     "test:worker": "vitest run --project worker",
     "test:site": "vitest run --project site"
   },
