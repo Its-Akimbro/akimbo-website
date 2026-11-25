@@ -12,6 +12,10 @@ export interface Env {
   ASSETS: AssetsBinding;
   /** The canonical hostname; `www.<APEX_HOST>` redirects here. */
   APEX_HOST: string;
+  /** Secret: the Postmark server token for the enquiry stream. */
+  POSTMARK_TOKEN: string;
+  /** Secret: the Turnstile widget's secret key, for siteverify. */
+  TURNSTILE_SECRET: string;
   /**
    * Outbound HTTP for upstream calls. Not set in production, where the
    * global `fetch` is used; tests inject a fake.

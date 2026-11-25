@@ -17,6 +17,9 @@ import {
   SITE_ORIGIN,
 } from "./dist";
 
+/** Cloudflare Turnstile, the only third-party script on the site (spec #28). */
+const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
+
 describe("built site", () => {
   it("is static files with no server entry point", () => {
     const serverEntries = ["_worker.js", "entry.mjs", "server"].filter((name) =>
@@ -114,14 +117,25 @@ describe("built site", () => {
     expect(maps.filter((url) => !isSameSite(url) || !servedFile(url.pathname))).toEqual([]);
   });
 
-  it("loads nothing from a third-party origin", () => {
+  it("loads nothing from a third-party origin, except Turnstile on /contact", () => {
+    const allowed = (page: { path: string }, url: URL) =>
+      isSameSite(url) || (page.path === "/contact/" && url.origin === TURNSTILE_ORIGIN);
+
     const thirdParty = pages().flatMap((page) =>
       loadedUrls(page)
-        .filter((url) => !isSameSite(url))
+        .filter((url) => !allowed(page, url))
         .map((url) => `${page.path} → ${url.href}`),
     );
 
     expect(thirdParty).toEqual([]);
+  });
+
+  it("loads the Turnstile script on /contact", () => {
+    const contact = pages().find((page) => page.path === "/contact/")!;
+
+    expect(loadedUrls(contact).map((url) => url.href)).toContain(
+      `${TURNSTILE_ORIGIN}/turnstile/v0/api.js`,
+    );
   });
 
   it("has a title, description and social preview meta on every page", () => {

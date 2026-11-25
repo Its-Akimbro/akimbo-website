@@ -9,7 +9,10 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   site: "https://akimbo.technology",
   output: "static",
-  integrations: [sitemap()],
+  integrations: [
+    // The contact confirmation page is only reached by sending the form.
+    sitemap({ filter: (page) => !page.endsWith("/contact/thanks/") }),
+  ],
   vite: {
     plugins: [tailwindcss()],
     // The brand theme, fonts and logos live in ../brand, shared with the

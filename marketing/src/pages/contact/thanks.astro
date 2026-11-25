@@ -1,0 +1,25 @@
+---
+// Where the Worker sends a browser after a successful no-JS form post.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { CONTACT_EMAIL } from "../../site";
+---
+
+<BaseLayout
+  title="Thanks for getting in touch"
+  description="Your enquiry has reached Akimbo Technology."
+  noindex
+>
+  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <h1>Thanks for getting in touch</h1>
+    <p class="mt-4 max-w-xl">
+      Your enquiry has reached us. We'll reply within one business day, to the email address
+      you gave.
+    </p>
+    <p class="mt-4 max-w-xl text-muted">
+      Something urgent, or need to add anything? Email <a
+        href={`mailto:${CONTACT_EMAIL}`}
+        class="text-blue underline hover:text-blue-dark">{CONTACT_EMAIL}</a
+      >.
+    </p>
+  </div>
+</BaseLayout>
