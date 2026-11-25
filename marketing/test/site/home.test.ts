@@ -38,7 +38,7 @@ describe("home page", () => {
       "Network projects",
     ]);
     expect(tiles.map(tileLink)).toEqual([
-      ["/contact/?service=network-audit"],
+      ["/services/network-audit/"],
       ["/services/managed-networking/"],
       ["/services/servers-virtualisation/"],
       ["/services/network-projects/"],
