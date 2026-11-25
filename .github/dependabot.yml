@@ -1,6 +1,8 @@
 version: 2
 
-# Weekly, one grouped PR per ecosystem. Security updates are grouped too and
+# Weekly, one grouped PR per ecosystem for minor and patch updates, which
+# should merge green. Each major update opens its own PR, so one breaking
+# upgrade doesn't hold back the rest. Security updates are grouped too and
 # open as soon as an advisory lands; they ship within 7 days (spec #28).
 updates:
   - package-ecosystem: npm # Dependabot's ecosystem name for pnpm too
@@ -8,10 +10,16 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # typescript-eslint and `astro check` don't support TypeScript 7 yet
+      # (PR #46). Drop this once both do.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     groups:
       marketing-deps:
         applies-to: version-updates
         patterns: ["*"]
+        update-types: ["minor", "patch"]
       marketing-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -25,6 +33,7 @@ updates:
       actions:
         applies-to: version-updates
         patterns: ["*"]
+        update-types: ["minor", "patch"]
       actions-security:
         applies-to: security-updates
         patterns: ["*"]
