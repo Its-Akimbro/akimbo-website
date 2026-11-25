@@ -10,6 +10,7 @@ import {
   loadedUrls,
   PORTAL_ORIGIN,
   pages,
+  readableText,
   servedFile,
   sitemapUrls,
   SITE_ORIGIN,
@@ -24,8 +25,8 @@ describe("built site", () => {
     expect(serverEntries).toEqual([]);
   });
 
-  it("lists the home page in the sitemap", () => {
-    expect(sitemapUrls()).toContain(`${SITE_ORIGIN}/`);
+  it.each(["/", "/how-we-work/", "/about/"])("lists %s in the sitemap", (path) => {
+    expect(sitemapUrls()).toContain(`${SITE_ORIGIN}${path}`);
   });
 
   it("has a page for every sitemap URL", () => {
@@ -84,6 +85,28 @@ describe("built site", () => {
     });
 
     expect(missing).toEqual([]);
+  });
+
+  it("marks every placeholder the same way, as [TBD: …]", () => {
+    const unmarked = pages().flatMap((page) =>
+      readableText(page)
+        .flatMap((text) => [...text.matchAll(/\[[^\]]*\]/g)].map((m) => m[0]))
+        .filter((bracketed) => !/^\[TBD: [^\]]+\]$/.test(bracketed))
+        .map((bracketed) => `${page.path} → ${bracketed}`),
+    );
+
+    expect(unmarked).toEqual([]);
+  });
+
+  it("shows a service-area map on the About page, served by this site", () => {
+    const about = pages().find((page) => page.path === "/about/")!;
+    const maps = about.html
+      .querySelectorAll("img")
+      .filter((img) => /service area/i.test(img.getAttribute("alt") ?? ""))
+      .map((img) => new URL(img.getAttribute("src") ?? "", SITE_ORIGIN + about.path));
+
+    expect(maps).not.toEqual([]);
+    expect(maps.filter((url) => !isSameSite(url) || !servedFile(url.pathname))).toEqual([]);
   });
 
   it("loads nothing from a third-party origin", () => {

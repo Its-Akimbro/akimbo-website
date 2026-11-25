@@ -118,6 +118,24 @@ export function links(page: Page, scope?: string): Link[] {
   );
 }
 
+/** Attributes whose values a visitor sees or hears, or a link preview shows. */
+const READABLE_ATTRIBUTES = ["alt", "title", "aria-label", "placeholder", "content"];
+
+/**
+ * The text a visitor could read on the page: its visible text (scripts and
+ * styles excluded) and readable attribute values such as alt text and meta
+ * descriptions, one string each, whitespace collapsed.
+ */
+export function readableText(page: Page): string[] {
+  const body = page.html.querySelector("body")?.clone() as HTMLElement | undefined;
+  body?.querySelectorAll("script, style").forEach((el) => el.remove());
+  const attributes = page.html
+    .querySelectorAll(READABLE_ATTRIBUTES.map((name) => `[${name}]`).join(", "))
+    .flatMap((el) => READABLE_ATTRIBUTES.map((name) => el.getAttribute(name)))
+    .filter((value): value is string => Boolean(value));
+  return [body?.textContent ?? "", ...attributes].map((text) => text.replace(/\s+/g, " ").trim());
+}
+
 /** Whether a URL points at the given site path on this site, ignoring a trailing slash. */
 export function isSitePath(url: URL, path: string): boolean {
   return isSameSite(url) && url.pathname.replace(/(.)\/$/, "$1") === path;

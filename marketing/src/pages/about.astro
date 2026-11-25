@@ -1,0 +1,84 @@
+---
+import AuditCta from "../components/AuditCta.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import {
+  CERTIFICATIONS,
+  CITY_REGION,
+  FOUNDER_NAME,
+  placeholder,
+  SERVICE_AREA_MAP,
+  YEARS_OF_EXPERIENCE,
+} from "../placeholders";
+---
+
+<BaseLayout
+  title="About"
+  description="Akimbo Technology is a founder-led infrastructure MSP. Meet the engineer who answers when you call, and check whether we serve your area."
+>
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <h1>About Akimbo</h1>
+      <p class="mt-4 max-w-2xl text-lg">
+        A small, founder-led firm that looks after networks and servers for small businesses in {CITY_REGION}. When you
+        call, you get the engineer who knows your network.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="founder" class="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
+    <div class="md:col-span-2">
+      <h2 id="founder">Meet the founder</h2>
+      <p class="mt-4">
+        I'm {FOUNDER_NAME}, and I've spent {YEARS_OF_EXPERIENCE} years building and running business networks and
+        servers. {placeholder("Founder story: where you've worked and the kinds of networks you've looked after")}
+      </p>
+      <p class="mt-4">
+        I started Akimbo Technology because small businesses deserve the same care for their infrastructure as large
+        ones: networks that are documented, prices that are published, and an engineer who explains things plainly.
+      </p>
+      <p class="mt-4">
+        Akimbo does infrastructure only: networks, servers and virtualisation. We don't do desktop support or a help
+        desk, so all of our attention goes on the parts that keep your business connected.
+      </p>
+    </div>
+    <div>
+      <h2 class="text-h3">Credentials</h2>
+      <ul class="mt-4 list-disc space-y-2 pl-5">
+        {CERTIFICATIONS.map((credential) => <li>{credential}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="service-area" class="border-t border-slate-200">
+    <div class="mx-auto grid max-w-6xl items-start gap-10 px-4 py-12 sm:px-6 md:grid-cols-2">
+      <div>
+        <h2 id="service-area">Where we work</h2>
+        <p class="mt-4">
+          We come on site anywhere in {CITY_REGION}, shown on the map. Outside that area, we can manage your network
+          remotely and travel for audits and projects.
+        </p>
+        <p class="mt-4">Not sure whether you're covered? Ask when you book and we'll tell you.</p>
+      </div>
+      <figure>
+        <img
+          src={SERVICE_AREA_MAP.src}
+          width={SERVICE_AREA_MAP.width}
+          height={SERVICE_AREA_MAP.height}
+          alt={`Map of Akimbo's on-site service area: ${CITY_REGION}`}
+          loading="lazy"
+          class="h-auto w-full rounded-lg"
+        />
+      </figure>
+    </div>
+  </section>
+
+  <section class="bg-slate-50">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-4 px-4 py-12 sm:px-6">
+      <h2>Start with a network audit</h2>
+      <p class="max-w-2xl">
+        A fixed-price, one-site audit is the easiest way to see how we work, and the report is yours to keep.
+      </p>
+      <AuditCta />
+    </div>
+  </section>
+</BaseLayout>

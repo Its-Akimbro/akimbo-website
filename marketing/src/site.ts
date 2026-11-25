@@ -12,8 +12,7 @@ export const PORTAL_URL = "https://portal.akimbo.technology/";
 
 export const CONTACT_EMAIL = "hello@akimbo.technology";
 
-/** Placeholder until the owner fills it in before launch (spec #28). */
-export const MAILING_ADDRESS = ["[Mailing address line 1]", "[City, NC ZIP]"];
+export { MAILING_ADDRESS } from "./placeholders";
 
 /** The primary call to action on every page. */
 export const AUDIT_CTA = { label: "Book a network audit", href: "/contact/" };
@@ -22,7 +21,10 @@ export const AUDIT_CTA = { label: "Book a network audit", href: "/contact/" };
  * Header navigation. Each page's ticket adds its entry when the page lands,
  * so the nav never links to a page that doesn't exist.
  */
-export const NAV: { label: string; href: string }[] = [];
+export const NAV: { label: string; href: string }[] = [
+  { label: "How we work", href: "/how-we-work/" },
+  { label: "About", href: "/about/" },
+];
 
 export const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy/" },
