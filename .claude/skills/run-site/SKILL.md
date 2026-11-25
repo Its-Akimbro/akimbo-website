@@ -22,7 +22,15 @@ Use only these values. Real secrets live in Cloudflare and are set from the admi
 
 ## 2. Start the server
 
-Run `pnpm preview` in the background, then wait for its `Ready on http://localhost:8787` line. Stop it with `pkill -f "wrangler dev"` when done.
+Run `pnpm preview` in the background, then wait for its `Ready on http://localhost:8787` line.
+
+Stop it when done, then check that `curl http://localhost:8787/` no longer connects:
+
+```sh
+pkill -f '[n]ode_modules/.pnpm/(wrangler|@cloudflare\+workerd)'
+```
+
+The bracket keeps the pattern from matching your own shell's command line. Stopping the background task alone leaves `wrangler` and `workerd` running on the port.
 
 The Worker's structured log lines (`{"route":"/api/contact","outcome":…}`) are in the server's output: the outcome of every submission.
 
