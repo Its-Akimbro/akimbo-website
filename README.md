@@ -1,0 +1,45 @@
+# akimbo-website
+
+The public Marketing Site and (later) the Client Portal for Akimbo Technology. See `GLOSSARY.md` for terms and `docs/adr/` for decisions.
+
+## Marketing Site (`marketing/`)
+
+A static Astro site served by the **Marketing Worker** (`marketing/worker/`) as Workers static assets on `akimbo.technology`. `www.akimbo.technology` redirects to the apex (ADR 0001, ADR 0005).
+
+### Prerequisites
+
+- Node 22 (`marketing/.nvmrc`)
+- pnpm, the version pinned in `marketing/package.json` (`corepack enable pnpm` picks it up)
+
+All commands below run from `marketing/`:
+
+```sh
+cd marketing
+pnpm install
+```
+
+### Develop
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Astro dev server with hot reload, for working on pages. It doesn't run the Worker. |
+| `pnpm build` | Builds the static site into `dist/`. No server code is emitted. |
+| `pnpm preview` | Builds, then runs the Marketing Worker locally with `wrangler dev`, serving `dist/` as static assets the way production does. |
+
+To try the `www` redirect locally: `curl -i -H 'Host: www.akimbo.technology' http://localhost:8787/`.
+
+### Check and test
+
+| Command | What it does |
+| --- | --- |
+| `pnpm lint` | ESLint over the site, Worker and tests. |
+| `pnpm typecheck` | `astro check`, covering `.astro` and TypeScript files (Worker and tests included). |
+| `pnpm test:worker` | **Seam 1.** Calls the Worker's fetch handler with built `Request`s and a test environment of fakes (`test/worker/harness.ts`). |
+| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists and internal links resolve. Run `pnpm build` first. |
+| `pnpm test` | Both test suites. |
+
+When you write Worker tests, use `createHarness()`. Give it fake static assets (`assets`), fake upstreams keyed by origin (`upstreams`, e.g. Turnstile siteverify or Postmark), and config overrides (`vars`). Then assert on the `Response` and on `assetRequests` / `upstreamRequests`. The Worker must make upstream calls through `env.fetch ?? fetch`, so that the fakes see them.
+
+### CI
+
+`.github/workflows/marketing-ci.yml` runs on every PR (and on pushes to `main`) that touches `marketing/**` or the workflow itself. It installs, lints, type-checks, builds, and then runs both test suites. Because of the path filters, a PR that doesn't touch the site doesn't run the job. If the job becomes a required check under branch protection, a PR outside these paths will wait on a check that never runs. Use a ruleset that only requires it when it runs, or add a no-op fallback job.

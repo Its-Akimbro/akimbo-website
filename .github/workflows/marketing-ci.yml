@@ -1,0 +1,50 @@
+name: Marketing CI
+
+on:
+  pull_request:
+    paths:
+      - "marketing/**"
+      - ".github/workflows/marketing-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "marketing/**"
+      - ".github/workflows/marketing-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: marketing-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: marketing
+
+jobs:
+  check:
+    name: Lint, type-check, build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: marketing/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: marketing/.nvmrc
+          cache: pnpm
+          cache-dependency-path: marketing/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test:worker
+      - run: pnpm test:site

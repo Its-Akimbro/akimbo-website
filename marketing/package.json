@@ -1,0 +1,35 @@
+{
+  "name": "akimbo-marketing",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "pnpm build && wrangler dev",
+    "lint": "eslint .",
+    "typecheck": "astro check",
+    "test": "pnpm test:worker && pnpm test:site",
+    "test:worker": "vitest run --project worker",
+    "test:site": "vitest run --project site"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.6",
+    "astro": "^7.4.13"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "globals": "^17.14.0",
+    "node-html-parser": "^9.0.7",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0",
+    "vitest": "^5.1.1",
+    "wrangler": "^4.167.0"
+  }
+}
