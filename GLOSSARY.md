@@ -39,3 +39,7 @@ _Avoid_: Dashboard, customer area
 **Source of Truth**:
 NetBox, the single authoritative record of every Customer's infrastructure; the website displays it and never writes back.
 _Avoid_: Database, CMDB
+
+**Shared Object**:
+Infrastructure recorded in NetBox that serves more than one Customer or the MSP itself (e.g. a colocation Site or a shared Rack), so it belongs to no single Customer.
+_Avoid_: Untenanted object, common infrastructure
