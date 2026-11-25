@@ -31,7 +31,19 @@ describe("/plans", () => {
     const shown = new Set(dollarAmounts(content));
 
     expect(PUBLISHED.filter((amount) => !shown.has(amount))).toEqual([]);
-    for (const tier of TIERS) expect(content).toContain(tier.name);
+  });
+
+  it("shows each tier with its own from price", () => {
+    const tiers = text(region(plans(), "The tiers"));
+
+    for (const tier of TIERS) {
+      expect(tiers).toContain(`${tier.name} From $${tier.fromPerSite} `);
+    }
+  });
+
+  it("never runs a number into the next word", () => {
+    // e.g. "within 10business days", where a template expression ate a space.
+    expect(text(plans().html).match(/\d[a-z]{3,}/gi) ?? []).toEqual([]);
   });
 
   it("shows no dollar amount the pricing module doesn't publish", () => {

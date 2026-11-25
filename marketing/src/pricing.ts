@@ -154,6 +154,9 @@ export const TIERS: readonly Tier[] = [
   },
 ];
 
+/** The tier that covers servers and VMs. */
+export const SERVER_TIER = TIERS.find((t) => t.coversServers)!;
+
 export function tier(id: TierId): Tier {
   return TIERS.find((t) => t.id === id)!;
 }
@@ -184,8 +187,7 @@ export interface Quote {
 export function planQuote(plan: PlanSpec): Quote {
   const t = tier(plan.tier);
   if (!t.coversServers && (plan.servers > 0 || plan.vms > 0)) {
-    const serverTier = TIERS.find((candidate) => candidate.coversServers)!;
-    throw new Error(`Servers and VMs are covered only on ${serverTier.name}, not ${t.name}.`);
+    throw new Error(`Servers and VMs are covered only on ${SERVER_TIER.name}, not ${t.name}.`);
   }
   const extraDevices = plan.siteDevices.reduce(
     (sum, devices) => sum + Math.max(0, devices - PLAN_BASIS.devicesIncludedPerSite),
@@ -211,8 +213,13 @@ export function planQuote(plan: PlanSpec): Quote {
 }
 
 /** "3 managed VMs × $100". */
-function perUnit(count: number, [one, many]: [string, string], price: number): QuoteLine {
-  return { label: `${count} ${count === 1 ? one : many} × ${formatUsd(price)}`, amount: count * price };
+function perUnit(n: number, [one, many]: [string, string], price: number): QuoteLine {
+  return { label: `${count(n, one, many)} × ${formatUsd(price)}`, amount: n * price };
+}
+
+/** "1 hour", "3 managed VMs". */
+export function count(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`;
 }
 
 /** The one worked example on /plans (ticket #14). */
