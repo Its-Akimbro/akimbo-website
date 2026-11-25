@@ -1,0 +1,116 @@
+---
+// The Network Audit, the front door of the site. Every number here comes
+// from the pricing module (spec #28, ticket #14).
+import AuditCta from "../../components/AuditCta.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { AUDIT, count, CURRENCY, formatUsd, pricesAsOfLabel } from "../../pricing";
+import { contactHref, SERVICES } from "../../services";
+import { AUDIT_CTA } from "../../site";
+
+const { name } = SERVICES["network-audit"];
+const summary = `A fixed-price ${formatUsd(AUDIT.price)} look at your network: what you have, what's at risk and what it would cost to fix. The report is yours to keep.`;
+const sectionClass = "mx-auto max-w-6xl px-4 py-10 sm:px-6";
+---
+
+<BaseLayout title={name} description={summary}>
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <h1>{name}</h1>
+      <p class="mt-4 max-w-2xl text-lg">{summary}</p>
+      <p class="mt-4 text-sm">
+        Prices in {CURRENCY}, excluding any applicable sales tax. Prices as of {pricesAsOfLabel()}.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="scope" class={sectionClass}>
+    <h2 id="scope">Price and scope</h2>
+    <p class="mt-4">
+      <span class="font-heading text-h2 font-bold">{formatUsd(AUDIT.price)}</span>
+      <span class="text-muted"> fixed</span>
+    </p>
+    <ul class="mt-6 max-w-3xl list-disc space-y-2 pl-5">
+      <li>{count(AUDIT.sites, "site", "sites")}.</li>
+      <li>Up to {AUDIT.maxDevices} infrastructure devices: firewalls, routers, switches, access points, servers, hypervisor hosts and storage.</li>
+      <li>Endpoints such as laptops, phones and printers are scanned, but not counted towards the limit.</li>
+      <li>Up to {count(AUDIT.daysOnSite, "day", "days")} on site.</li>
+      <li>Remediation isn't included. Fixing what we find is quoted separately, from the findings.</li>
+    </ul>
+    <h3 class="mt-8">Bigger than that?</h3>
+    <p class="mt-2 max-w-3xl">
+      Each extra site, or each further {AUDIT.addOnDeviceBlock} devices, is a fixed add-on from
+      +{formatUsd(AUDIT.addOnFrom)}. We quote it before any work starts.
+    </p>
+  </section>
+
+  <section aria-labelledby="deliverables" class={sectionClass}>
+    <h2 id="deliverables">What you get</h2>
+    <ul class="mt-6 grid gap-6 sm:grid-cols-2">
+      <li class="rounded-lg border border-slate-200 bg-slate-50 p-6">
+        <h3>An inventory</h3>
+        <p class="mt-2">
+          Every infrastructure device, with its model, firmware, end-of-life and support status.
+        </p>
+      </li>
+      <li class="rounded-lg border border-slate-200 bg-slate-50 p-6">
+        <h3>A network diagram</h3>
+        <p class="mt-2">How your network is actually connected, drawn up from what we found on site.</p>
+      </li>
+      <li class="rounded-lg border border-slate-200 bg-slate-50 p-6">
+        <h3>Risk-ranked findings</h3>
+        <p class="mt-2">Risk-ranked findings with fix-cost estimates, so you can see what matters most and what it costs.</p>
+      </li>
+      <li class="rounded-lg border border-slate-200 bg-slate-50 p-6">
+        <h3>A walkthrough</h3>
+        <p class="mt-2">
+          A {AUDIT.walkthroughMinutes.min}–{AUDIT.walkthroughMinutes.max} minute walkthrough of the report, in
+          plain English, with time for your questions.
+        </p>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="after" class={sectionClass}>
+    <h2 id="after">After the audit</h2>
+    <p class="mt-4 max-w-3xl text-lg font-semibold">
+      The report is yours to keep, whether or not you hire us.
+    </p>
+    <p class="mt-2 max-w-3xl">
+      Take it to another provider, or use it to fix things yourself. There's no catch.
+    </p>
+
+    <h3 class="mt-8">If you carry on with us</h3>
+    <p class="mt-2 max-w-3xl">
+      If you sign a Plan, or a project quoted from the audit, within {AUDIT.creditWindowDays} days,
+      the full fee is credited against your first Plan invoices or that project.
+      There's no separate onboarding fee.
+    </p>
+
+    <h3 class="mt-8">Your inventory in the Client Portal</h3>
+    <p class="mt-2 max-w-3xl">
+      The inventory comes with your report. It goes live in the Client Portal when you join a Plan,
+      and from then on we keep it up to date.
+    </p>
+    <p class="mt-2">
+      <a href="/how-we-work/#client-portal" class="font-semibold text-blue underline hover:text-blue-dark">
+        More about the Client Portal
+      </a>
+    </p>
+  </section>
+
+  <section aria-labelledby="book" class="border-t border-slate-200 bg-slate-50">
+    <div class={sectionClass}>
+      <h2 id="book">Book your audit</h2>
+      <p class="mt-4 max-w-3xl">
+        Tell us about your site and roughly how many devices you have. We'll confirm the scope and
+        the price in writing before we set a date.
+      </p>
+      <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <AuditCta>{AUDIT_CTA.label} · {formatUsd(AUDIT.price)}</AuditCta>
+        <a href={contactHref("network-audit")} class="font-semibold text-blue underline hover:text-blue-dark">
+          Or ask a question about the audit
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
