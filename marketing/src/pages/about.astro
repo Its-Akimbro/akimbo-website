@@ -5,7 +5,7 @@ import {
   CERTIFICATIONS,
   CITY_REGION,
   FOUNDER_NAME,
-  placeholder,
+  FOUNDER_STORY,
   SERVICE_AREA_MAP,
   YEARS_OF_EXPERIENCE,
 } from "../placeholders";
@@ -30,7 +30,7 @@ import {
       <h2 id="founder">Meet the founder</h2>
       <p class="mt-4">
         I'm {FOUNDER_NAME}, and I've spent {YEARS_OF_EXPERIENCE} years building and running business networks and
-        servers. {placeholder("Founder story: where you've worked and the kinds of networks you've looked after")}
+        servers. {FOUNDER_STORY}
       </p>
       <p class="mt-4">
         I started Akimbo Technology because small businesses deserve the same care for their infrastructure as large
@@ -41,12 +41,12 @@ import {
         desk, so all of our attention goes on the parts that keep your business connected.
       </p>
     </div>
-    <div>
-      <h2 class="text-h3">Credentials</h2>
+    <section aria-labelledby="credentials">
+      <h2 id="credentials" class="text-h3">Credentials</h2>
       <ul class="mt-4 list-disc space-y-2 pl-5">
         {CERTIFICATIONS.map((credential) => <li>{credential}</li>)}
       </ul>
-    </div>
+    </section>
   </section>
 
   <section aria-labelledby="service-area" class="border-t border-slate-200">
@@ -54,8 +54,7 @@ import {
       <div>
         <h2 id="service-area">Where we work</h2>
         <p class="mt-4">
-          We come on site anywhere in {CITY_REGION}, shown on the map. Outside that area, we can manage your network
-          remotely and travel for audits and projects.
+          We come on site anywhere in {CITY_REGION}, shown on the map, and manage networks remotely wherever you are.
         </p>
         <p class="mt-4">Not sure whether you're covered? Ask when you book and we'll tell you.</p>
       </div>

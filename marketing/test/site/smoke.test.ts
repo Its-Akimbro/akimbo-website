@@ -99,11 +99,12 @@ describe("built site", () => {
   });
 
   it("shows a service-area map on the About page, served by this site", () => {
-    const about = pages().find((page) => page.path === "/about/")!;
-    const maps = about.html
+    const about = pages().find((page) => page.path === "/about/");
+    expect(about, "no /about/ page").toBeDefined();
+    const maps = about!.html
       .querySelectorAll("img")
       .filter((img) => /service area/i.test(img.getAttribute("alt") ?? ""))
-      .map((img) => new URL(img.getAttribute("src") ?? "", SITE_ORIGIN + about.path));
+      .map((img) => new URL(img.getAttribute("src") ?? "", SITE_ORIGIN + about!.path));
 
     expect(maps).not.toEqual([]);
     expect(maps.filter((url) => !isSameSite(url) || !servedFile(url.pathname))).toEqual([]);

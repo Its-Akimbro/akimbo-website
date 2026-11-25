@@ -15,7 +15,10 @@ export function placeholder(what: string): string {
 }
 
 export const FOUNDER_NAME = placeholder("Founder name");
-export const YEARS_OF_EXPERIENCE = placeholder("N");
+export const FOUNDER_STORY = placeholder(
+  "Founder story: where you've worked and the kinds of networks you've looked after",
+);
+export const YEARS_OF_EXPERIENCE = placeholder("Years of experience");
 /** Where Akimbo works on site, e.g. a city or region name. */
 export const CITY_REGION = placeholder("City/Region");
 export const CERTIFICATIONS = [
