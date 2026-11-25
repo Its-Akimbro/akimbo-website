@@ -32,7 +32,7 @@ To try the `www` redirect locally: `curl -i -H 'Host: www.akimbo.technology' htt
 
 The palette, type scale and fonts live in one shared Tailwind v4 file, `brand/theme.css`, which the Client Portal will import too (ADR 0001). The fonts are self-hosted OFL files in `brand/fonts/`, so no page requests a font CDN. `marketing/src/styles/global.css` imports Tailwind and then the theme.
 
-Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which supplies the meta tags, the header (with the audit CTA and "Log in") and the footer. The legal pages wrap theirs in `LegalLayout.astro`, which adds the effective date and the "draft pending attorney review" notice. Site-wide facts such as the portal URL, the legal links and the header nav are in `marketing/src/site.ts`. When a page lands, add it to `NAV` there.
+Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which supplies the meta tags, the header (with the audit CTA and "Log in") and the footer. The legal pages wrap theirs in `LegalLayout.astro`, which adds the effective date and the "draft pending attorney review" notice. Site-wide facts such as the portal URL, the legal links and the header nav are in `marketing/src/site.ts`. When a page lands, add it to `NAV` there. Content the owner hasn't supplied yet goes in `marketing/src/placeholders.ts`, marked `[TBD: …]`, so `grep -r "TBD:"` finds every placeholder before launch.
 
 ### Check and test
 
@@ -41,7 +41,7 @@ Every page wraps its content in `marketing/src/layouts/BaseLayout.astro`, which 
 | `pnpm lint` | ESLint over the site, Worker and tests. |
 | `pnpm typecheck` | `astro check`, covering `.astro` and TypeScript files (Worker and tests included). |
 | `pnpm test:worker` | **Seam 1.** Calls the Worker's fetch handler with built `Request`s and a test environment of fakes (`test/worker/harness.ts`). |
-| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin. The legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. Run `pnpm build` first. |
+| `pnpm test:site` | **Seam 2.** Smoke test over the built `dist/`: every sitemap page exists, internal links resolve, and every page has the audit CTA to `/contact`, a "Log in" link to the portal host, the footer legal links and social meta, and loads nothing from a third-party origin; every placeholder is marked `[TBD: …]`; About has a self-hosted service-area map; the legal pages are in the sitemap, each shows an effective date and a draft notice, and the Privacy Policy names its processors, retention periods and cookie use. Run `pnpm build` first. |
 | `pnpm test` | Both test suites. |
 
 When you write Worker tests, use `createHarness()`. Give it fake static assets (`assets`), fake upstreams keyed by origin (`upstreams`, e.g. Turnstile siteverify or Postmark), and config overrides (`vars`). Then assert on the `Response` and on `assetRequests` / `upstreamRequests`. The Worker must make upstream calls through `env.fetch ?? fetch`, so that the fakes see them.

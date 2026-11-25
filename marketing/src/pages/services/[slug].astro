@@ -1,0 +1,18 @@
+---
+// One page per service on the shared template. The Network Audit has its
+// own page at /services/network-audit/.
+import type { GetStaticPaths } from "astro";
+import ServicePage from "../../components/ServicePage.astro";
+import { SERVICE_PAGES, type ServicePageContent } from "../../service-pages";
+
+export const getStaticPaths = (() =>
+  SERVICE_PAGES.map((page) => ({ params: { slug: page.slug }, props: { page } }))) satisfies GetStaticPaths;
+
+interface Props {
+  page: ServicePageContent;
+}
+
+const { page } = Astro.props;
+---
+
+<ServicePage page={page} />

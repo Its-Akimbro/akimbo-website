@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { isServiceSlug } from "../../src/services";
 import {
   DIST,
   internalReferences,
@@ -8,16 +9,13 @@ import {
   isSitePath,
   links,
   loadedUrls,
-  mainText,
-  pageAt,
   PORTAL_ORIGIN,
   pages,
+  readableText,
   servedFile,
   sitemapUrls,
   SITE_ORIGIN,
 } from "./dist";
-
-const LEGAL_PATHS = ["/privacy/", "/terms/", "/accessibility/"];
 
 describe("built site", () => {
   it("is static files with no server entry point", () => {
@@ -28,58 +26,12 @@ describe("built site", () => {
     expect(serverEntries).toEqual([]);
   });
 
-  it("lists the home page in the sitemap", () => {
-    expect(sitemapUrls()).toContain(`${SITE_ORIGIN}/`);
-  });
-
-  it("lists every legal page in the sitemap", () => {
-    const missing = LEGAL_PATHS.filter((path) => !sitemapUrls().includes(`${SITE_ORIGIN}${path}`));
-
-    expect(missing).toEqual([]);
-  });
-
-  it("shows an effective date on every legal page", () => {
-    const missing = LEGAL_PATHS.filter(
-      (path) => !/Effective date:? [A-Z][a-z]+ \d{1,2}, \d{4}/.test(mainText(pageAt(path))),
-    );
-
-    expect(missing).toEqual([]);
-  });
-
-  it("marks every legal page as a draft pending attorney review", () => {
-    const missing = LEGAL_PATHS.filter(
-      (path) => !/draft[^.]*attorney review/i.test(mainText(pageAt(path))),
-    );
-
-    expect(missing).toEqual([]);
-  });
-
-  it("has a Privacy Policy naming its processors, retention periods and cookie use", () => {
-    const text = mainText(pageAt("/privacy/"));
-    // Each item must appear in the policy (#37, spec #28).
-    const required: [string, RegExp][] = [
-      ["names Cloudflare", /Cloudflare/],
-      ["names Turnstile", /Turnstile/],
-      ["names Postmark", /Postmark/],
-      ["says Postmark open and click tracking is off", /open and click tracking[^.]*\boff\b/i],
-      ["names Microsoft 365", /Microsoft 365/],
-      ["says the contact form stores nothing", /stores nothing/i],
-      ["says no auto-reply is sent", /no (automatic reply|auto-reply)/i],
-      ["says personal information is not sold", /do not sell/i],
-      ["gives the audit retention", /90 days after/i],
-      ["gives the offboarding retention", /30 days after/i],
-      ["gives the backup retention", /within 12 months/i],
-      ["covers cookies", /strictly necessary/i],
-      ["covers Do Not Track", /Do Not Track/],
-      ["covers children", /children/i],
-    ];
-    const missing = required.filter(([, pattern]) => !pattern.test(text)).map(([what]) => what);
-
-    // No state or EU rights sections that would promise processes Akimbo doesn't run.
-    const rightsLaws = text.match(/\b(CCPA|CPRA|GDPR)\b/g) ?? [];
-
-    expect({ missing, rightsLaws }).toEqual({ missing: [], rightsLaws: [] });
-  });
+  it.each(["/", "/how-we-work/", "/about/", "/privacy/", "/terms/", "/accessibility/"])(
+    "lists %s in the sitemap",
+    (path) => {
+      expect(sitemapUrls()).toContain(`${SITE_ORIGIN}${path}`);
+    },
+  );
 
   it("has a page for every sitemap URL", () => {
     const missing = sitemapUrls().filter((url) => !servedFile(new URL(url).pathname));
@@ -139,6 +91,29 @@ describe("built site", () => {
     expect(missing).toEqual([]);
   });
 
+  it("marks every placeholder the same way, as [TBD: …]", () => {
+    const unmarked = pages().flatMap((page) =>
+      readableText(page)
+        .flatMap((text) => [...text.matchAll(/\[[^\]]*\]/g)].map((m) => m[0]))
+        .filter((bracketed) => !/^\[TBD: [^\]]+\]$/.test(bracketed))
+        .map((bracketed) => `${page.path} → ${bracketed}`),
+    );
+
+    expect(unmarked).toEqual([]);
+  });
+
+  it("shows a service-area map on the About page, served by this site", () => {
+    const about = pages().find((page) => page.path === "/about/");
+    expect(about, "no /about/ page").toBeDefined();
+    const maps = about!.html
+      .querySelectorAll("img")
+      .filter((img) => /service area/i.test(img.getAttribute("alt") ?? ""))
+      .map((img) => new URL(img.getAttribute("src") ?? "", SITE_ORIGIN + about!.path));
+
+    expect(maps).not.toEqual([]);
+    expect(maps.filter((url) => !isSameSite(url) || !servedFile(url.pathname))).toEqual([]);
+  });
+
   it("loads nothing from a third-party origin", () => {
     const thirdParty = pages().flatMap((page) =>
       loadedUrls(page)
@@ -177,5 +152,16 @@ describe("built site", () => {
     });
 
     expect(problems).toEqual([]);
+  });
+
+  it("only presets an allow-listed service on contact links", () => {
+    const bad = pages().flatMap((page) =>
+      links(page)
+        .filter((link) => isSitePath(link.url, "/contact") && link.url.searchParams.has("service"))
+        .filter((link) => !isServiceSlug(link.url.searchParams.get("service")))
+        .map((link) => `${page.path} → ${link.url.search}`),
+    );
+
+    expect(bad).toEqual([]);
   });
 });

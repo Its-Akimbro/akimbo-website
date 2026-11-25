@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <!-- Placeholder: replace with the owner's self-hosted service-area map before launch. -->
+  <rect width="800" height="600" fill="#f8fafc"/>
+  <rect x="1" y="1" width="798" height="598" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+  <circle cx="400" cy="300" r="200" fill="#2859b6" fill-opacity="0.08" stroke="#2859b6" stroke-width="3" stroke-dasharray="12 10"/>
+  <circle cx="400" cy="300" r="10" fill="#0d213c"/>
+  <text x="400" y="560" text-anchor="middle" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="28" fill="#475569">[TBD: Service-area map]</text>
+</svg>
