@@ -1,4 +1,4 @@
-// The contact page's General enquiry form, posted as a browser with no
+// The contact page's Book an audit and General enquiry forms, posted as a browser with no
 // JavaScript would: the built HTML form (seam 2) submitted to the Worker's
 // fetch handler (seam 1).
 import { describe, expect, it } from "vitest";
@@ -167,6 +167,133 @@ describe("/contact General enquiry form", () => {
     expect(formLinks.some((l) => l.text === "Privacy Policy" && isSitePath(l.url, "/privacy"))).toBe(
       true,
     );
+  });
+});
+
+/** What a visitor types into the Book an audit form's required fields. */
+const AUDIT_VISITOR = {
+  name: "Ada Lovelace",
+  business: "Analytical Engines Ltd",
+  email: "ada@example.com",
+  town: "Raleigh",
+};
+
+describe("/contact Book an audit form", () => {
+  it("asks for name, business name, email, town or city and device count", () => {
+    const form = formTitled(page("/contact/"), "Book an audit");
+
+    expect(requiredFields(form).sort()).toEqual(["business", "devices", "email", "name", "town"]);
+  });
+
+  it("books an audit when posted without JavaScript and lands on a confirmation page", async () => {
+    const form = formTitled(page("/contact/"), "Book an audit");
+    const harness = fakeServices();
+
+    const response = await post(
+      harness,
+      form,
+      withWidgetToken(
+        submission(form, {
+          ...AUDIT_VISITOR,
+          devices: "gt25",
+          phone: "+1 919 555 0100",
+          timing: "Weekday mornings",
+          notes: "Two comms cupboards.",
+        }),
+      ),
+    );
+
+    expect(response.status).toBe(303);
+    expect(servedFile(new URL(response.headers.get("location")!).pathname)).toBeDefined();
+    const emails = harness.upstreamRequests.filter((r) => r.url.startsWith(POSTMARK));
+    expect(emails).toHaveLength(1);
+    const { Subject, TextBody } = await emails[0].json();
+    expect(Subject).toMatch(/^\[Audit\] /);
+    for (const line of [
+      "Name: Ada Lovelace",
+      "Business: Analytical Engines Ltd",
+      "Email: ada@example.com",
+      "Phone: +1 919 555 0100",
+      "Site town/city: Raleigh",
+      "Infrastructure devices: More than 25",
+      "Over the 25-device audit limit: Yes, quote the add-on",
+      "Preferred timing: Weekday mornings",
+      "  Two comms cupboards.",
+    ]) {
+      expect(TextBody).toContain(`\n${line}\n`);
+    }
+  });
+
+  it("offers only device counts the Worker accepts", async () => {
+    const form = formTitled(page("/contact/"), "Book an audit");
+    const options = form
+      .querySelectorAll('select[name="devices"] option')
+      .map((o) => o.getAttribute("value") ?? "")
+      .filter(Boolean);
+
+    expect(options.sort()).toEqual(["10to25", "gt25", "lt10"]);
+    for (const devices of options) {
+      const harness = fakeServices();
+      const response = await post(
+        harness,
+        form,
+        withWidgetToken(submission(form, { ...AUDIT_VISITOR, devices })),
+      );
+      expect(response.status, `devices=${devices}`).toBe(303);
+    }
+  });
+
+  it("tells a visitor with more than 25 devices the add-on will be quoted", () => {
+    const form = formTitled(page("/contact/"), "Book an audit");
+    const text = form.textContent.replace(/\s+/g, " ");
+
+    expect(text).toMatch(/more than 25, it's outside the standard audit and we'll quote the add-on/);
+  });
+
+  it("sends nothing when a bot fills in every field, including the hidden one", async () => {
+    const form = formTitled(page("/contact/"), "Book an audit");
+    const everything = Object.fromEntries(
+      [...submission(form, {}).keys()].map((name) => [name, "spam"]),
+    );
+    const harness = fakeServices();
+
+    const response = await post(
+      harness,
+      form,
+      withWidgetToken(
+        submission(form, { ...everything, ...AUDIT_VISITOR, devices: "lt10", service: "" }),
+      ),
+    );
+
+    expect(response.status).toBe(303);
+    expect(harness.upstreamRequests).toHaveLength(0);
+  });
+
+  it("has a Turnstile widget", () => {
+    const form = formTitled(page("/contact/"), "Book an audit");
+
+    expect(form.querySelector(".cf-turnstile[data-sitekey]")).not.toBeNull();
+  });
+
+  it("links to the Privacy Policy from the form", () => {
+    const contact = page("/contact/");
+    const form = formTitled(contact, "Book an audit");
+    const formLinks = links({ path: contact.path, html: form });
+
+    expect(formLinks.some((l) => l.text === "Privacy Policy" && isSitePath(l.url, "/privacy"))).toBe(
+      true,
+    );
+  });
+});
+
+describe("/contact page", () => {
+  it("has both forms, with no two controls sharing an id", () => {
+    const contact = page("/contact/");
+    formTitled(contact, "Book an audit");
+    formTitled(contact, "General enquiry");
+
+    const ids = contact.html.querySelectorAll("[id]").map((el) => el.id);
+    expect(ids.length).toBe(new Set(ids).size);
   });
 });
 

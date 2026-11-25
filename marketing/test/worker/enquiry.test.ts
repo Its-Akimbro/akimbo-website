@@ -1,31 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createHarness, type HarnessOptions } from "./harness";
-
-const TURNSTILE = "https://challenges.cloudflare.com";
-const POSTMARK = "https://api.postmarkapp.com";
-
-/** A Turnstile siteverify fake that passes or fails every token. */
-function turnstile(success: boolean) {
-  return () => Response.json({ success, "error-codes": success ? [] : ["invalid-input-response"] });
-}
-
-/** A Postmark fake that accepts every email. */
-function postmarkAccepts() {
-  return () =>
-    Response.json({
-      To: "hello@akimbo.technology",
-      SubmittedAt: "2026-11-24T12:00:00Z",
-      MessageID: "b7bc2f4a-e38e-4336-af7d-e6c392c2f817",
-      ErrorCode: 0,
-      Message: "OK",
-    });
-}
-
-function site(upstreams: HarnessOptions["upstreams"] = {}) {
-  return createHarness({
-    upstreams: { [TURNSTILE]: turnstile(true), [POSTMARK]: postmarkAccepts(), ...upstreams },
-  });
-}
+import type { HarnessOptions } from "./harness";
+import {
+  POSTMARK,
+  postmarkCalls,
+  site,
+  submit,
+  submitForErrors,
+  TURNSTILE,
+  turnstile,
+  without,
+} from "./contact-requests";
 
 const validEnquiry = {
   kind: "enquiry",
@@ -34,40 +18,6 @@ const validEnquiry = {
   message: "Can you look after our office network?",
   "cf-turnstile-response": "token-from-widget",
 };
-
-/** POST a form-encoded body to /api/contact, as a browser with no JS would. */
-function submit(
-  harness: ReturnType<typeof createHarness>,
-  fields: Record<string, string>,
-  headers: Record<string, string> = {},
-) {
-  return harness.fetch("https://akimbo.technology/api/contact", {
-    method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      accept: "text/html,application/xhtml+xml,*/*;q=0.8",
-      ...headers,
-    },
-    body: new URLSearchParams(fields).toString(),
-  });
-}
-
-/** Submit and ask for a JSON reply, to read the per-field errors. */
-async function submitForErrors(
-  harness: ReturnType<typeof createHarness>,
-  fields: Record<string, string>,
-) {
-  const response = await submit(harness, fields, { accept: "application/json" });
-  return { status: response.status, body: await response.json() };
-}
-
-function without(fields: Record<string, string>, ...names: string[]) {
-  return Object.fromEntries(Object.entries(fields).filter(([name]) => !names.includes(name)));
-}
-
-function postmarkCalls(harness: ReturnType<typeof createHarness>) {
-  return harness.upstreamRequests.filter((r) => new URL(r.url).origin === POSTMARK);
-}
 
 describe("POST /api/contact, general enquiry", () => {
   it("sends one email and redirects to the confirmation page", async () => {

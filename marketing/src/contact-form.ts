@@ -11,6 +11,10 @@ export const MAX_LENGTH = {
   email: 254,
   business: 150,
   message: 5000,
+  town: 100,
+  phone: 40,
+  timing: 200,
+  notes: 5000,
 } as const;
 
 /** The hidden field only bots fill in. */
@@ -26,3 +30,19 @@ export const TURNSTILE_FIELD = "cf-turnstile-response";
  * real Worker secret, test-key tokens fail siteverify, so this fails closed.
  */
 export const TURNSTILE_SITE_KEY = "1x00000000000000000000AA";
+
+/**
+ * The Book an audit form's answers to "roughly how many infrastructure
+ * devices does the site have?", keyed by the submitted value.
+ */
+export const DEVICE_COUNTS = {
+  lt10: "Under 10",
+  "10to25": "10–25",
+  gt25: "More than 25",
+} as const;
+
+export type DeviceCount = keyof typeof DEVICE_COUNTS;
+
+export function isDeviceCount(value: string): value is DeviceCount {
+  return Object.hasOwn(DEVICE_COUNTS, value);
+}
