@@ -87,7 +87,7 @@ This puts the previous deployed version back on 100% of traffic in seconds. To p
 
 ### Secrets and settings the release needs
 
-These are created by hand in the Cloudflare and GitHub setup ticket (#42). The workflows expect these names:
+Both GitHub Environments already exist, with the settings below. The Cloudflare token, the account ID and the Worker secrets are added by hand in the setup ticket (#42). The workflows expect these names:
 
 | Name | Kind | Where | Notes |
 | --- | --- | --- | --- |
@@ -98,3 +98,16 @@ These are created by hand in the Cloudflare and GitHub setup ticket (#42). The w
 | `POSTMARK_TOKEN`, `TURNSTILE_SECRET` | Worker secrets | Cloudflare | Set from the admin workstation with `pnpm exec wrangler secret put <NAME>`. They carry over to every uploaded version and never pass through CI. |
 
 Preview URLs must be enabled on the account's `workers.dev` subdomain. `wrangler.jsonc` sets `preview_urls: true` for the Worker. If no preview URL comes back, the upload job fails rather than ask for approval blind.
+
+### Repository security settings
+
+The repo is public, and Client Portal and infrastructure issues live in the private `Its-Akimbro/akimbo-infra` (see `docs/agents/issue-tracker.md`). Only the owner and the owner's agents can change anything here:
+
+- **Interaction limit:** only collaborators can open issues or PRs, comment or react. It expires every 6 months; renew it in Settings → Moderation → Interaction limits, or with `gh api -X PUT repos/Its-Akimbro/akimbo-website/interaction-limits -f limit=collaborators_only -f expiry=six_months`.
+- **Actions:** the default `GITHUB_TOKEN` is read-only and can't approve PRs. Workflows from every outside contributor wait for the owner's approval.
+- **Rulesets:**
+  - `main` can't be force-pushed or deleted, by anyone.
+  - Changes to `main` need a PR from anyone without admin.
+  - Only admins can create, move or delete `marketing/v*` and `portal-edge/v*` tags.
+  - No status check is required yet, because of the CI path filters (see **CI**).
+- **Security:** secret scanning with push protection, Dependabot alerts and Dependabot security updates are on.
