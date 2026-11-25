@@ -60,3 +60,12 @@ export function without(fields: Record<string, string>, ...names: string[]) {
 export function postmarkCalls(harness: ReturnType<typeof createHarness>) {
   return harness.upstreamRequests.filter((r) => new URL(r.url).origin === POSTMARK);
 }
+
+/** POST a JSON body to /api/contact, as the contact page script does. */
+export function submitJson(harness: ReturnType<typeof createHarness>, body: unknown) {
+  return harness.fetch("https://akimbo.technology/api/contact", {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+}
