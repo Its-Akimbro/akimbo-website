@@ -11,7 +11,7 @@ const validAudit = {
   "cf-turnstile-response": "token-from-widget",
 };
 
-describe("POST /api/contact, audit booking", () => {
+describe("POST /api/contact, audit request", () => {
   it("sends one email and redirects to the confirmation page", async () => {
     const harness = site();
 
@@ -39,7 +39,7 @@ describe("audit validation", () => {
         business: "Enter the business name.",
         email: "Enter your email address.",
         town: "Enter the town or city the site is in.",
-        devices: "Choose roughly how many network devices the site has.",
+        devices: "Choose roughly how many infrastructure devices the site has.",
       },
     });
     expect(harness.upstreamRequests).toHaveLength(0);
@@ -60,7 +60,7 @@ describe("audit validation", () => {
 
       expect(status).toBe(422);
       expect(body.errors).toEqual({
-        devices: "Choose roughly how many network devices the site has.",
+        devices: "Choose roughly how many infrastructure devices the site has.",
       });
       expect(harness.upstreamRequests).toHaveLength(0);
     },
@@ -144,7 +144,7 @@ describe("the audit email", () => {
       ReplyTo: "ada@example.com",
       Subject: "[Audit] Ada Lovelace, Analytical Engines Ltd, Raleigh",
       TextBody: [
-        "Network Audit booking from the website contact form.",
+        "Network Audit request from the website contact form.",
         "",
         "Name: Ada Lovelace",
         "Business: Analytical Engines Ltd",

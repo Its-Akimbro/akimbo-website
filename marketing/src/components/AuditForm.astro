@@ -9,7 +9,7 @@ import {
   MAX_LENGTH,
   TURNSTILE_SITE_KEY,
 } from "../contact-form";
-import { AUDIT, formatUsd } from "../pricing";
+import { AUDIT, count, formatUsd } from "../pricing";
 
 const input =
   "mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-navy focus-visible:border-blue focus-visible:ring-2 focus-visible:ring-blue focus-visible:outline-none";
@@ -115,7 +115,7 @@ const optional = "font-normal text-muted";
       {Object.entries(DEVICE_COUNTS).map(([value, text]) => <option value={value}>{text}</option>)}
     </select>
     <p id="audit-devices-note" class="mt-2 text-sm">
-      The standard audit covers up to {AUDIT.maxDevices} infrastructure devices at one site. If
+      The standard audit covers up to {AUDIT.maxDevices} infrastructure devices at {count(AUDIT.sites, "site", "sites")}. If
       yours has more than {AUDIT.maxDevices}, it's outside the standard audit and we'll quote the
       add-on, from {formatUsd(AUDIT.addOnFrom)}.
     </p>

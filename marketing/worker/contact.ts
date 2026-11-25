@@ -36,7 +36,7 @@ interface GeneralEnquiry {
 }
 
 /** An audit request sent from the Book an audit form (`kind=audit`). */
-interface AuditBooking {
+interface AuditRequest {
   name: string;
   business: string;
   email: string;
@@ -71,7 +71,7 @@ interface Email {
 function readSubmission(field: (name: string) => string): { errors: FieldErrors; email: Email } {
   const kind = field("kind");
   if (kind === "audit") {
-    const booking: AuditBooking = {
+    const audit: AuditRequest = {
       name: field("name"),
       business: field("business"),
       email: field("email"),
@@ -82,7 +82,7 @@ function readSubmission(field: (name: string) => string): { errors: FieldErrors;
       notes: field("notes"),
       service: field("service"),
     };
-    return { errors: auditBookingErrors(booking), email: auditEmail(booking) };
+    return { errors: auditRequestErrors(audit), email: auditEmail(audit) };
   }
   const enquiry: GeneralEnquiry = {
     name: field("name"),
@@ -289,15 +289,15 @@ function generalEnquiryErrors(enquiry: GeneralEnquiry): FieldErrors {
   return errors;
 }
 
-function auditBookingErrors(booking: AuditBooking): FieldErrors {
-  const { errors, text, email, service } = fieldChecker({ ...booking });
+function auditRequestErrors(audit: AuditRequest): FieldErrors {
+  const { errors, text, email, service } = fieldChecker({ ...audit });
 
   text("name", "your name", "Enter your name.");
   text("business", "the business name", "Enter the business name.");
   email();
   text("town", "the town or city", "Enter the town or city the site is in.");
-  if (!isDeviceCount(booking.devices)) {
-    errors.devices = "Choose roughly how many network devices the site has.";
+  if (!isDeviceCount(audit.devices)) {
+    errors.devices = "Choose roughly how many infrastructure devices the site has.";
   }
   text("phone", "your phone number");
   text("timing", "your preferred timing");
@@ -382,13 +382,10 @@ function generalEnquiryEmail(enquiry: GeneralEnquiry): Email {
   const name = oneLine(enquiry.name);
   const business = oneLine(enquiry.business);
 
-  return {
-    MessageStream: POSTMARK_STREAM,
-    From: FROM,
-    To: TO,
-    ReplyTo: enquiry.email,
-    Subject: `[Enquiry] ${[name, business].filter(Boolean).join(", ")}`,
-    TextBody: [
+  return postmarkEmail(
+    enquiry.email,
+    `[Enquiry] ${[name, business].filter(Boolean).join(", ")}`,
+    [
       "General enquiry from the website contact form.",
       "",
       `Name: ${name}`,
@@ -398,43 +395,46 @@ function generalEnquiryEmail(enquiry: GeneralEnquiry): Email {
       "Message:",
       ...block(enquiry.message),
       "",
-    ].join("\n"),
-    // No tracking pixels or rewritten links in mail to our own mailbox.
-    TrackOpens: false,
-    TrackLinks: "None",
-  };
+    ],
+  );
 }
 
-/** The Postmark API body for a Network Audit booking. */
-function auditEmail(booking: AuditBooking): Email {
-  const name = oneLine(booking.name);
-  const business = oneLine(booking.business);
-  const town = oneLine(booking.town);
-  const devices = isDeviceCount(booking.devices) ? booking.devices : undefined;
+/** The Postmark API body for a Network Audit request. */
+function auditEmail(audit: AuditRequest): Email {
+  const name = oneLine(audit.name);
+  const business = oneLine(audit.business);
+  const town = oneLine(audit.town);
+  const devices = isDeviceCount(audit.devices) ? audit.devices : undefined;
 
-  return {
-    MessageStream: POSTMARK_STREAM,
-    From: FROM,
-    To: TO,
-    ReplyTo: booking.email,
-    Subject: `[Audit] ${[name, business, town].join(", ")}`,
-    TextBody: [
-      "Network Audit booking from the website contact form.",
+  return postmarkEmail(audit.email, `[Audit] ${[name, business, town].join(", ")}`, [
+      "Network Audit request from the website contact form.",
       "",
       `Name: ${name}`,
       `Business: ${business}`,
-      `Email: ${booking.email}`,
-      `Phone: ${oneLine(booking.phone) || NOT_GIVEN}`,
+      `Email: ${audit.email}`,
+      `Phone: ${oneLine(audit.phone) || NOT_GIVEN}`,
       `Site town/city: ${town}`,
       `Infrastructure devices: ${devices ? DEVICE_COUNTS[devices] : NOT_GIVEN}`,
       `Over the ${AUDIT.maxDevices}-device audit limit: ${
         devices === "gt25" ? "Yes, quote the add-on" : "No"
       }`,
-      `Preferred timing: ${oneLine(booking.timing) || NOT_GIVEN}`,
-      `Referring service: ${serviceLabel(booking.service)}`,
-      ...(booking.notes ? ["Notes:", ...block(booking.notes)] : [`Notes: ${NOT_GIVEN}`]),
+      `Preferred timing: ${oneLine(audit.timing) || NOT_GIVEN}`,
+      `Referring service: ${serviceLabel(audit.service)}`,
+      ...(audit.notes ? ["Notes:", ...block(audit.notes)] : [`Notes: ${NOT_GIVEN}`]),
       "",
-    ].join("\n"),
+  ]);
+}
+
+/** One email to `hello@` on the enquiry stream, replying to the submitter. */
+function postmarkEmail(replyTo: string, subject: string, lines: string[]): Email {
+  return {
+    MessageStream: POSTMARK_STREAM,
+    From: FROM,
+    To: TO,
+    ReplyTo: replyTo,
+    Subject: subject,
+    TextBody: lines.join("\n"),
+    // No tracking pixels or rewritten links in mail to our own mailbox.
     TrackOpens: false,
     TrackLinks: "None",
   };
