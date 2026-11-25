@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Runs the "No infrastructure details" check before a push, so a leak is
+# caught before it reaches GitHub, where edit history keeps it.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+exec "$(git rev-parse --show-toplevel)/scripts/check-no-infra-details.sh"
