@@ -9,6 +9,7 @@ import { outageResponse } from "./outage";
  */
 const ORIGIN_DOWN = new Set([502, 530]);
 
+/** The portal edge Worker: forwards to the portal, or shows the outage page. */
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     // On the route the hostname is already the portal's, and Cloudflare sends
@@ -23,6 +24,12 @@ export default {
     // portal response is per-user, so Cloudflare must not cache any of them,
     // static-looking paths included (needs compatibility_date 2024-11-11+).
     const toOrigin = new Request(url, request);
+    // On a Worker's request to its own zone, Cloudflare can take the origin's
+    // CF-Connecting-IP from X-Real-IP. The portal keys rate limits and the
+    // audit log on that address, so the visitor never gets to choose it.
+    const visitor = request.headers.get("cf-connecting-ip");
+    if (visitor) toOrigin.headers.set("x-real-ip", visitor);
+    else toOrigin.headers.delete("x-real-ip");
     let response: Response;
     try {
       response = await (env.fetch ?? fetch)(toOrigin, { redirect: "manual", cache: "no-store" });

@@ -3,6 +3,7 @@
 // meet WCAG 2.2 AA (user stories 30 and 31).
 import { parse, type HTMLElement } from "node-html-parser";
 import { describe, expect, it } from "vitest";
+import { PHONE_NUMBER } from "../../marketing/src/site";
 import { createHarness } from "./harness";
 
 async function outagePage(): Promise<{ response: Response; html: string; page: HTMLElement }> {
@@ -34,7 +35,11 @@ describe("the outage page", () => {
 
     const email = main.querySelector('a[href="mailto:hello@akimbo.technology"]');
     expect(text(email)).toBe("hello@akimbo.technology");
-    expect(main.querySelector('a[href^="tel:"]')).not.toBeNull();
+    expect(text(main)).toContain(PHONE_NUMBER);
+    // A number that isn't filled in yet must not become a dead `tel:` link.
+    for (const tel of main.querySelectorAll('a[href^="tel:"]')) {
+      expect(tel.getAttribute("href")).toMatch(/^tel:\+?\d{7,}$/);
+    }
     expect(text(main)).toContain("Monday–Friday, 8am–5pm Eastern");
   });
 

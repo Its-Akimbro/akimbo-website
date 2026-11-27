@@ -102,3 +102,28 @@ describe("the forwarded request", () => {
     expect(edge.originRequests[0].url).toBe("https://portal.akimbo.technology/sites/?q=1");
   });
 });
+
+describe("the visitor's address", () => {
+  // On a Worker's request to its own zone, Cloudflare can fill the origin's
+  // CF-Connecting-IP from X-Real-IP. The portal keys its rate limits and audit
+  // log on that address, so a visitor must not choose it.
+  it("replaces a client-sent X-Real-IP with the address Cloudflare saw", async () => {
+    const edge = createHarness(() => new Response("ok"));
+
+    await edge.fetch("https://portal.akimbo.technology/sign-in/", {
+      headers: { "cf-connecting-ip": "203.0.113.7", "x-real-ip": "198.51.100.1" },
+    });
+
+    expect(edge.originRequests[0].headers.get("x-real-ip")).toBe("203.0.113.7");
+  });
+
+  it("drops a client-sent X-Real-IP when Cloudflare gave no address", async () => {
+    const edge = createHarness(() => new Response("ok"));
+
+    await edge.fetch("https://portal.akimbo.technology/", {
+      headers: { "x-real-ip": "198.51.100.1" },
+    });
+
+    expect(edge.originRequests[0].headers.has("x-real-ip")).toBe(false);
+  });
+});

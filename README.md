@@ -130,7 +130,7 @@ Commands, from `portal-edge/` after `pnpm install`:
 
 **CI:** `portal-edge-ci.yml` runs those checks plus `pnpm audit` when a PR touches `portal-edge/`, `brand/`, the three Marketing Site modules the page reads, or the edge workflows. **Portal edge CI gate** is its required check.
 
-**Release:** tag a commit on `main` with `portal-edge/vMAJOR.MINOR.PATCH`. `portal-edge-release.yml` refuses tags not on `main`, reruns CI, uploads a version with `wrangler versions upload` (`portal-edge-preview`), and waits for the owner to approve `portal-edge-production`, which runs `wrangler versions deploy <version>@100%`. The preview URL forwards to the live portal, so it checks the pass-through. To see the outage page, run `pnpm preview`. Nothing in a Marketing Site release touches this Worker: each has its own tags, workflows, Environments and token.
+**Release:** tag a commit on `main` with `portal-edge/vMAJOR.MINOR.PATCH`. `portal-edge-release.yml` refuses tags not on `main`, reruns CI, uploads a version with `wrangler versions upload` (`portal-edge-preview`), and waits for the owner to approve `portal-edge-production`, which runs `wrangler versions deploy <version>@100%`. The preview URL is on `workers.dev`, so its requests reach the portal from another zone, through the live edge Worker. It's good for checking that pages load (GETs). Sign-in posts fail Django's CSRF origin check there, and the portal sees Cloudflare's shared Worker address as the client. To see the outage page, run `pnpm preview`. A Marketing Site release never touches this Worker, because each has its own tags, workflows, Environments and Worker name. Cloudflare can't scope a token to one Worker, though: each Workers-scoped token could change either Worker. The separation is in what each workflow runs.
 
 **Rollback:** from `portal-edge/`, `pnpm exec wrangler rollback --message "<reason>"` (see the Marketing Site's Rollback above for picking a version).
 
@@ -140,10 +140,10 @@ Commands, from `portal-edge/` after `pnpm install`:
 | --- | --- | --- |
 | `portal-edge-preview` | GitHub Environment | Deployment tags limited to `portal-edge/v*`. No reviewers. |
 | `portal-edge-production` | GitHub Environment | Deployment tags limited to `portal-edge/v*`. Required reviewer: the owner, "Prevent self-review" off. |
-| `CLOUDFLARE_API_TOKEN` | Environment secret, both | Its own Workers-scoped token (Workers Scripts and the zone's Workers Routes), not the Marketing Worker's. List it in the expiry register. |
+| `CLOUDFLARE_API_TOKEN` | Environment secret, both | A Workers-scoped token (Workers Scripts and the zone's Workers Routes) of its own, so revoking one Worker's token leaves the other deploying. List it in the expiry register. |
 | `CLOUDFLARE_ACCOUNT_ID` | Repository variable | Shared with the Marketing Site. |
 
-`wrangler versions upload` can't create a Worker or change its route. The first time, and whenever the route in `wrangler.jsonc` changes, the owner runs `pnpm exec wrangler deploy` from the admin workstation. The portal relies on `CF-Connecting-IP` for its rate limits and audit log. Cloudflare keeps the visitor's address in that header only on a Worker's requests to its own zone, so the Worker must stay on the `akimbo.technology` zone.
+`wrangler versions upload` can't create a Worker or change its route. The first time, and whenever the route in `wrangler.jsonc` changes, the owner runs `pnpm exec wrangler deploy` from the admin workstation. The portal relies on `CF-Connecting-IP` for its rate limits and audit log. Cloudflare keeps the visitor's address in that header only on a Worker's requests to its own zone, so the Worker must stay on the `akimbo.technology` zone. It may fill that header from `X-Real-IP`, so the Worker overwrites any `X-Real-IP` a visitor sends. After the first deploy, check that a sign-in's audit entry shows the real client address.
 
 ## Repository security settings
 

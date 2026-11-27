@@ -2,7 +2,7 @@
 // Its contact facts come from the Marketing Site's own modules, and its
 // classes are the Marketing Site's (SiteHeader, SiteFooter), so the two match.
 import { LOCKUP_SRC, PAGE_CSS } from "../build/page-assets";
-import { SUPPORT_HOURS } from "../../marketing/src/pricing";
+import { SUPPORT_HOURS_TEXT } from "../../marketing/src/pricing";
 import { CONTACT_EMAIL, LEGAL_NAME, PHONE_NUMBER, SITE_NAME, SITE_URL } from "../../marketing/src/site";
 
 const TITLE = "Client Portal temporarily unavailable";
@@ -10,9 +10,14 @@ const TITLE = "Client Portal temporarily unavailable";
 const escape = (value: string) =>
   value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-const hours = `${SUPPORT_HOURS.days}, ${SUPPORT_HOURS.open}–${SUPPORT_HOURS.close} ${SUPPORT_HOURS.timeZone}`;
-const telHref = `tel:${PHONE_NUMBER.replace(/[^\d+]/g, "")}`;
-const link = "text-blue underline hover:text-blue-dark";
+const linkClasses = "text-blue underline hover:text-blue-dark";
+
+// Until the owner supplies the number it is a "[TBD: …]" placeholder, which
+// is shown as plain text rather than as a `tel:` link that dials nothing.
+const phoneDigits = PHONE_NUMBER.replace(/[^\d+]/g, "");
+const phone = /\d{7,}/.test(phoneDigits)
+  ? `<a href="tel:${escape(phoneDigits)}" class="${linkClasses}">${escape(PHONE_NUMBER)}</a>`
+  : escape(PHONE_NUMBER);
 
 /** The outage page's HTML, built once: it never varies by request. */
 export const OUTAGE_PAGE = `<!doctype html>
@@ -42,11 +47,11 @@ export const OUTAGE_PAGE = `<!doctype html>
         <h2 class="mt-10">Need us in the meantime?</h2>
         <dl class="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-[max-content_1fr]">
           <dt class="font-semibold">Email</dt>
-          <dd><a href="mailto:${escape(CONTACT_EMAIL)}" class="${link}">${escape(CONTACT_EMAIL)}</a></dd>
+          <dd><a href="mailto:${escape(CONTACT_EMAIL)}" class="${linkClasses}">${escape(CONTACT_EMAIL)}</a></dd>
           <dt class="font-semibold">Phone</dt>
-          <dd><a href="${escape(telHref)}" class="${link}">${escape(PHONE_NUMBER)}</a></dd>
+          <dd>${phone}</dd>
           <dt class="font-semibold">Business hours</dt>
-          <dd>${escape(hours)}</dd>
+          <dd>${escape(SUPPORT_HOURS_TEXT)}</dd>
         </dl>
       </div>
     </main>

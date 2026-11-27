@@ -19,8 +19,10 @@ export interface Harness {
   cacheCalls: string[];
 }
 
+/** The portal hostname the test environment forwards to. */
 export const PORTAL_HOST = "portal.akimbo.technology";
 
+/** A test environment around the Worker, with `origin` as the fake origin. */
 export function createHarness(origin: Origin): Harness {
   const originRequests: Request[] = [];
   const cacheCalls: string[] = [];
@@ -39,9 +41,8 @@ export function createHarness(origin: Origin): Harness {
   const recordingCache = new Proxy(
     {},
     {
-      get: (_target, method) => (...args: unknown[]) => {
+      get: (_target, method) => () => {
         cacheCalls.push(String(method));
-        void args;
         return Promise.resolve(undefined);
       },
     },
