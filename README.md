@@ -1,6 +1,6 @@
 # akimbo-website
 
-The public Marketing Site and (later) the Client Portal for Akimbo Technology. See `GLOSSARY.md` for terms and `docs/adr/` for decisions.
+The public Marketing Site for Akimbo Technology, and the Client Portal's edge Worker. The Client Portal itself is in the private `Its-Akimbro/akimbo-infra`. See `GLOSSARY.md` for terms and `docs/adr/` for decisions.
 
 ## Marketing Site (`marketing/`)
 
@@ -62,7 +62,7 @@ Two workflows run on every PR:
   - **Lint workflows** runs actionlint, with shellcheck on every `run:` script, over `.github/workflows/`.
   - **No infrastructure details** runs `scripts/check-no-infra-details.sh` (ADR 0006).
 
-`CI gate`, `Lint workflows` and `No infrastructure details` are required checks on `main`.
+`CI gate`, `Portal edge CI gate`, `Lint workflows` and `No infrastructure details` are required checks on `main`.
 
 ### Dependencies
 
@@ -112,7 +112,40 @@ Both GitHub Environments already exist, with the settings below. The Cloudflare 
 
 Preview URLs must be enabled on the account's `workers.dev` subdomain. `wrangler.jsonc` sets `preview_urls: true` for the Worker. If no preview URL comes back, the upload job fails rather than ask for approval blind.
 
-### Repository security settings
+## Portal edge Worker (`portal-edge/`)
+
+A pass-through Worker on `portal.akimbo.technology` only, not on the admin hostname (ADR 0005; ADR 0006 as amended for why it lives here). It forwards every request to the Client Portal through the Cloudflare Tunnel, with redirects returned as they are and Cloudflare told not to cache anything. It changes nothing unless the portal is down. It holds no secrets.
+
+When the origin can't be reached, or answers 502 (cloudflared can't reach the portal guest) or 530 (error 1033: no tunnel connector is up), it answers with the branded **"Client Portal temporarily unavailable"** page instead. That response is a 503 with `Retry-After: 300` and `Cache-Control: no-store`, and the page gives `hello@`, the phone number and business hours. Every other response passes through byte-for-byte, the portal's own 5xx pages included. The page reads those facts from `marketing/src/site.ts` and `pricing.ts`, and its look from `brand/`. `scripts/build-page.mjs` builds its CSS with Tailwind and inlines the fonts and the lockup, so it loads nothing from any origin.
+
+Commands, from `portal-edge/` after `pnpm install`:
+
+| Command | What it does |
+| --- | --- |
+| `pnpm build` | Builds the outage page's assets into `build/` (git-ignored). The other commands run it first. |
+| `pnpm preview` | Runs the Worker with `wrangler dev` pointed at an unreachable origin, so every page is the outage page. |
+| `pnpm lint` / `pnpm typecheck` | ESLint; `tsc`. |
+| `pnpm test` | **Seam 5 of spec #16:** the fetch handler with a fake origin (`test/harness.ts`). It covers pass-through, the 502/530/unreachable mapping, no caching (the origin request is `no-store` and the Cache API is never touched), the outage page's content and WCAG 2.2 AA basics, and the route in `wrangler.jsonc`. |
+| `pnpm check:bundle` | Bundles with `wrangler deploy --dry-run`, as a release would. |
+
+**CI:** `portal-edge-ci.yml` runs those checks plus `pnpm audit` when a PR touches `portal-edge/`, `brand/`, the three Marketing Site modules the page reads, or the edge workflows. **Portal edge CI gate** is its required check.
+
+**Release:** tag a commit on `main` with `portal-edge/vMAJOR.MINOR.PATCH`. `portal-edge-release.yml` refuses tags not on `main`, reruns CI, uploads a version with `wrangler versions upload` (`portal-edge-preview`), and waits for the owner to approve `portal-edge-production`, which runs `wrangler versions deploy <version>@100%`. The preview URL forwards to the live portal, so it checks the pass-through. To see the outage page, run `pnpm preview`. Nothing in a Marketing Site release touches this Worker: each has its own tags, workflows, Environments and token.
+
+**Rollback:** from `portal-edge/`, `pnpm exec wrangler rollback --message "<reason>"` (see the Marketing Site's Rollback above for picking a version).
+
+**Settings it needs** (added by hand, as for the Marketing Worker):
+
+| Name | Kind | Notes |
+| --- | --- | --- |
+| `portal-edge-preview` | GitHub Environment | Deployment tags limited to `portal-edge/v*`. No reviewers. |
+| `portal-edge-production` | GitHub Environment | Deployment tags limited to `portal-edge/v*`. Required reviewer: the owner, "Prevent self-review" off. |
+| `CLOUDFLARE_API_TOKEN` | Environment secret, both | Its own Workers-scoped token (Workers Scripts and the zone's Workers Routes), not the Marketing Worker's. List it in the expiry register. |
+| `CLOUDFLARE_ACCOUNT_ID` | Repository variable | Shared with the Marketing Site. |
+
+`wrangler versions upload` can't create a Worker or change its route. The first time, and whenever the route in `wrangler.jsonc` changes, the owner runs `pnpm exec wrangler deploy` from the admin workstation. The portal relies on `CF-Connecting-IP` for its rate limits and audit log. Cloudflare keeps the visitor's address in that header only on a Worker's requests to its own zone, so the Worker must stay on the `akimbo.technology` zone.
+
+## Repository security settings
 
 The repo is public, and Client Portal and infrastructure issues live in the private `Its-Akimbro/akimbo-infra` (ADR 0006, `docs/agents/issue-tracker.md`). Only the owner and the owner's agents can change anything here:
 

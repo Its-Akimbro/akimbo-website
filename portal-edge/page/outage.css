@@ -1,0 +1,8 @@
+/*
+ * The outage page's stylesheet: Tailwind with the Marketing Site's brand
+ * theme, scanning only the page's own markup. scripts/build-page.mjs builds
+ * it and inlines the fonts, so the page needs nothing from any origin.
+ */
+@import "tailwindcss" source(none);
+@source "../worker/outage-page.ts";
+@import "../../brand/theme.css";

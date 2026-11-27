@@ -24,6 +24,24 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
 
+  - package-ecosystem: npm
+    directory: /portal-edge
+    schedule:
+      interval: weekly
+      day: monday
+    ignore:
+      # Kept in step with marketing/ (see above).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+    groups:
+      portal-edge-deps:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      portal-edge-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

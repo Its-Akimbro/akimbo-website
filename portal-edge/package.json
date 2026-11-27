@@ -1,0 +1,30 @@
+{
+  "name": "akimbo-portal-edge",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build-page.mjs",
+    "preview": "pnpm build && wrangler dev --var PORTAL_HOST:portal.invalid",
+    "lint": "eslint .",
+    "typecheck": "pnpm build && tsc",
+    "test": "pnpm build && vitest run",
+    "check:bundle": "pnpm build && wrangler deploy --dry-run --outdir .wrangler/dry-run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/cli": "^4.3.5",
+    "@types/node": "^22.20.7",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "node-html-parser": "^9.0.7",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0",
+    "vitest": "^5.1.2",
+    "wrangler": "^4.168.0"
+  }
+}
