@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Deployed separately from the Marketing Worker (akimbo-marketing), from
+  // `portal-edge/v*` tags only (ADR 0005, ADR 0006 as amended).
+  "name": "akimbo-portal-edge",
+  "main": "worker/index.ts",
+  // 2024-11-11 or later, for `cache: "no-store"` on the origin fetch.
+  "compatibility_date": "2026-11-01",
+  // The portal hostname only. The admin hostname sits behind Cloudflare
+  // Access and keeps Cloudflare's own error pages.
+  "routes": [{ "pattern": "portal.akimbo.technology/*", "zone_name": "akimbo.technology" }],
+  // The live Worker answers only on its route. Each `wrangler versions upload`
+  // still gets a preview URL, which the owner checks before approving.
+  "workers_dev": false,
+  "preview_urls": true,
+  "vars": {
+    "PORTAL_HOST": "portal.akimbo.technology"
+  }
+}

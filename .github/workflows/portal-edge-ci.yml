@@ -1,0 +1,146 @@
+name: Portal edge CI
+
+on:
+  # Every PR runs this workflow so `Portal edge CI gate` can be a required
+  # check; the `changes` job skips the real work when a PR doesn't touch the
+  # edge Worker or what it builds from.
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - "portal-edge/**"
+      - "brand/**"
+      - "marketing/src/site.ts"
+      - "marketing/src/pricing.ts"
+      - "marketing/src/placeholders.ts"
+      - ".github/workflows/portal-edge-ci.yml"
+      - ".github/workflows/portal-edge-release.yml"
+  # The release workflow reruns CI on the tagged commit before uploading.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portal-edge-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: portal-edge
+
+jobs:
+  changes:
+    name: Detect edge Worker changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      edge: ${{ steps.diff.outputs.edge }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - if: github.event_name == 'pull_request'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Pushes to main (already path-filtered) and release tags (via
+      # workflow_call) always run the edge jobs. The outage page reads the
+      # brand theme and the Marketing Site's contact facts, so those count.
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$EVENT" != "pull_request" ]]; then
+            echo "edge=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" |
+            grep -qE '^(portal-edge/|brand/|marketing/src/(site|pricing|placeholders)\.ts$|\.github/workflows/portal-edge-(ci|release)\.yml$)'; then
+            echo "edge=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "edge=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    name: Lint, type-check, test and bundle
+    needs: changes
+    if: needs.changes.outputs.edge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: portal-edge/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: portal-edge/.nvmrc
+          cache: pnpm
+          cache-dependency-path: |
+            portal-edge/pnpm-lock.yaml
+            marketing/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      # The outage page imports Marketing Site modules, and the bundlers read
+      # marketing/tsconfig.json for them, which extends Astro's.
+      - run: pnpm --dir ../marketing install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # Bundles the Worker with wrangler's own esbuild, as a release would.
+      - run: pnpm check:bundle
+
+  audit:
+    name: Dependency audit
+    needs: changes
+    if: needs.changes.outputs.edge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: portal-edge/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: portal-edge/.nvmrc
+
+      # Reads the lockfile against the registry's advisories; nothing is
+      # installed. Fails on an advisory of any severity.
+      - run: pnpm audit
+
+  # A required check on `main`, named apart from Marketing's `CI gate`. It
+  # passes when the edge jobs passed or were skipped because nothing relevant
+  # changed, and fails otherwise.
+  gate:
+    name: Portal edge CI gate
+    needs: [changes, check, audit]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              exit 1
+            fi
+          done

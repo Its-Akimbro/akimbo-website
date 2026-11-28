@@ -87,6 +87,9 @@ export const SUPPORT_HOURS = {
   timeZone: "Eastern",
 } as const;
 
+/** Support hours as one phrase, as the Plans page and the portal's outage page show them. */
+export const SUPPORT_HOURS_TEXT = `${SUPPORT_HOURS.days}, ${SUPPORT_HOURS.open}–${SUPPORT_HOURS.close} ${SUPPORT_HOURS.timeZone}`;
+
 export const CONTRACT = {
   cancellationNoticeDays: 30,
   priceChangeNoticeDays: 30,

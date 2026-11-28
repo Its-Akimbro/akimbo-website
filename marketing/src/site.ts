@@ -7,12 +7,15 @@ export const HOME_TITLE = `${SITE_NAME} | Managed networks and infrastructure`;
 export const DEFAULT_DESCRIPTION =
   "Managed networks, servers and virtualisation for small businesses, with published prices and a fixed-price network audit to start.";
 
+/** The Marketing Site's home page; astro.config.mjs's `site` is its origin. */
+export const SITE_URL = "https://akimbo.technology/";
+
 /** The Client Portal is a separate app on its own hostname (ADR 0001). */
 export const PORTAL_URL = "https://portal.akimbo.technology/";
 
 export const CONTACT_EMAIL = "hello@akimbo.technology";
 
-export { MAILING_ADDRESS } from "./placeholders";
+export { MAILING_ADDRESS, PHONE_NUMBER } from "./placeholders";
 
 /** The primary call to action on every page. */
 export const AUDIT_CTA = { label: "Book a network audit", href: "/contact/" };

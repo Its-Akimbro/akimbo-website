@@ -24,4 +24,6 @@ export const CERTIFICATIONS = [
   placeholder("Certification"),
   placeholder("Certification"),
 ];
+/** The business phone number, shown on the portal's outage page (portal-edge/). */
+export const PHONE_NUMBER = placeholder("Phone number");
 export const MAILING_ADDRESS = [placeholder("Mailing address line 1"), placeholder("City, NC ZIP")];

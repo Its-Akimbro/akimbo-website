@@ -17,7 +17,7 @@ import {
   count,
   SERVER_ADDONS,
   SERVER_TIER,
-  SUPPORT_HOURS,
+  SUPPORT_HOURS_TEXT,
   tier,
   TIERS,
   TRAVEL,
@@ -27,7 +27,6 @@ import {
 const example = WORKED_EXAMPLE.plan;
 const exampleTier = tier(example.tier);
 const exampleQuote = planQuote(example);
-const supportHours = `${SUPPORT_HOURS.days}, ${SUPPORT_HOURS.open}–${SUPPORT_HOURS.close} ${SUPPORT_HOURS.timeZone}`;
 
 const compareRows: { label: string; value: (t: (typeof TIERS)[number]) => string }[] = [
   { label: "Includes", value: (t) => t.includes },
@@ -186,7 +185,7 @@ const sectionClass = "mx-auto max-w-6xl px-4 py-10 sm:px-6";
     <dl class="mt-4 grid max-w-3xl gap-4">
       <div>
         <dt class="font-semibold">Business hours</dt>
-        <dd>{supportHours}.</dd>
+        <dd>{SUPPORT_HOURS_TEXT}.</dd>
       </div>
       <div>
         <dt class="font-semibold">Critical</dt>
@@ -270,7 +269,7 @@ const sectionClass = "mx-auto max-w-6xl px-4 py-10 sm:px-6";
   <section aria-labelledby="support-hours" class={sectionClass}>
     <h2 id="support-hours">Support hours</h2>
     <p class="mt-4 max-w-3xl">
-      {supportHours}. Monitoring runs around the clock, and alerts are answered during support hours.
+      {SUPPORT_HOURS_TEXT}. Monitoring runs around the clock, and alerts are answered during support hours.
       Out of hours we respond on a best-effort basis on {tier("managed").name} and {SERVER_TIER.name}. We don't promise a 24/7
       response.
     </p>
