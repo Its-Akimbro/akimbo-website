@@ -85,9 +85,14 @@ jobs:
         with:
           node-version-file: portal-edge/.nvmrc
           cache: pnpm
-          cache-dependency-path: portal-edge/pnpm-lock.yaml
+          cache-dependency-path: |
+            portal-edge/pnpm-lock.yaml
+            marketing/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+      # The outage page imports Marketing Site modules, and the bundlers read
+      # marketing/tsconfig.json for them, which extends Astro's.
+      - run: pnpm --dir ../marketing install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
